@@ -1,10 +1,6 @@
 .gradle
 **/build/
 !src/**/build/
-# idea path
-**/.idea/
-# server config file
-src/main/resources/application-server.properties
 
 # Ignore Gradle GUI config
 gradle-app.setting
