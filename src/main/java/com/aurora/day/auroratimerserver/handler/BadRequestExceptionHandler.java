@@ -1,6 +1,7 @@
 package com.aurora.day.auroratimerserver.handler;
 
 import cn.hutool.json.JSONObject;
+import com.aurora.day.auroratimerserver.exceptions.UserServicesException;
 import com.aurora.day.auroratimerserver.schemes.R;
 import com.aurora.day.auroratimerserver.schemes.R_MsgList;
 import org.springframework.validation.BindException;
@@ -36,6 +37,11 @@ public class BadRequestExceptionHandler {
         return R_MsgList.error("请求参数错误");
     }
 
+    @ExceptionHandler(UserServicesException.class)
+    public R UserServiceException(UserServicesException e){
+        return R.error("服务层出错",e,false);
+    }
+
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public R RequestMethodException(HttpRequestMethodNotSupportedException e) {
@@ -44,10 +50,7 @@ public class BadRequestExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public R GlobalException(Exception e) {
-        JSONObject error = new JSONObject();
-        error.set("reason", e.getLocalizedMessage());
-        error.set("stacks", e.getStackTrace());
-        return R.error("未分类错误", error);
+        return R.error("未分类错误", e,false);
     }
 
 

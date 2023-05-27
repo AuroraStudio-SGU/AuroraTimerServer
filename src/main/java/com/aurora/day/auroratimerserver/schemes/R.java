@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 
 @Data
@@ -45,6 +46,17 @@ public class R implements Serializable {
 
     public static R error(String code,String msg){return new R(code,msg,null); }
     public static R error(String msg,Object obj){return new R("100",msg,obj); }
+
+    public static R error(String msg,Exception e ,boolean isFullTrack){
+        JSONObject error = new JSONObject();
+        error.set("reason", e.getLocalizedMessage());
+        if(isFullTrack){
+            error.set("stacks", e.getStackTrace());
+        }else {
+            error.set("stacks", Arrays.copyOfRange(e.getStackTrace(),0,10));
+        }
+        return R.error(msg,error);
+    }
 
     public static R_MsgList errorList(List<String> errors){
         return new R_MsgList("100",new JSONArray(errors));
