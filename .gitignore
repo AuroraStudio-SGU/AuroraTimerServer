@@ -4,6 +4,7 @@
 
 # idea path
 **/.idea/
+/.idea/
 
 # server config file
 src/main/resources/application-server.properties
@@ -22,3 +23,4 @@ gradle-app.setting
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+
