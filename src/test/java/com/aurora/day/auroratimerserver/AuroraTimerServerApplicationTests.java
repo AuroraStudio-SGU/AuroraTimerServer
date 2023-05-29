@@ -1,17 +1,27 @@
 package com.aurora.day.auroratimerserver;
 
+import cn.hutool.core.date.CalendarUtil;
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
 import com.aurora.day.auroratimerserver.config.TimerConfig;
 import com.aurora.day.auroratimerserver.mapper.UserMapper;
+import com.aurora.day.auroratimerserver.mapper.UserTimeMapper;
+import com.aurora.day.auroratimerserver.pojo.TermTime;
+import com.aurora.day.auroratimerserver.pojo.UserTime;
+import com.aurora.day.auroratimerserver.servicelmpl.UserTimeServiceImpl;
 import com.aurora.day.auroratimerserver.utils.SchoolCalendarUtil;
+import com.aurora.day.auroratimerserver.vo.UserOnlineTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.util.Calendar;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -78,5 +88,36 @@ class AuroraTimerServerApplicationTests {
     @Test
     void getTermTime(){
         System.out.println(SchoolCalendarUtil.getTermTime());
+    }
+
+    @Autowired
+    UserTimeMapper userTimeMapper;
+    @Autowired
+    UserTimeServiceImpl userTimeService;
+    @Test
+    void mockTime(){
+        for (int i = 0; i < 365; i++) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_YEAR,i);
+            UserTime userTime = new UserTime("21125023000", DateUtil.format(calendar.getTime(), DatePattern.NORM_DATE_PATTERN),DateUtil.format(calendar.getTime(),DatePattern.NORM_DATETIME_PATTERN),14400L);
+            userTimeMapper.insert(userTime);
+        }
+    }
+
+    @Test
+    void rankTimeTest(){
+        List<UserOnlineTime> rankTime = userTimeMapper.getRankTime("2023-05-28", "2024-05-26", "2023-05-28", "2023-06-04");
+        rankTime.forEach(System.out::println);
+    }
+    @Test
+    void dateTest(){
+        int x = 1;
+        String weekStart = DateUtil.format(CalendarUtil.beginOfWeek(DateUtil.offsetWeek(DateUtil.date(),-x).toCalendar()).getTime(), DatePattern.NORM_DATE_PATTERN);
+        String weekEnd = DateUtil.format(CalendarUtil.endOfWeek(DateUtil.offsetWeek(DateUtil.date(),-x).toCalendar()).getTime(), DatePattern.NORM_DATE_PATTERN);
+        System.out.println("weekStart:"+weekStart);
+        System.out.println("weekEnd:"+weekEnd);
+        TermTime termTime = SchoolCalendarUtil.getTermTimeLocal();
+        System.out.println("TermFirst:"+termTime.first);
+        System.out.println("TermSecond:"+termTime.second);
     }
 }

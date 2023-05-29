@@ -1,10 +1,15 @@
 package com.aurora.day.auroratimerserver;
 
+import cn.hutool.core.date.CalendarUtil;
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
 import com.aurora.day.auroratimerserver.config.TimerConfig;
+import com.aurora.day.auroratimerserver.pojo.TermTime;
+import com.aurora.day.auroratimerserver.utils.SchoolCalendarUtil;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -30,6 +35,18 @@ public class NormalTest {
     @Test
     void htmldemo() {
 
+    }
+
+    @Test
+    void dateTest(){
+        int x = 1;
+        String weekStart = DateUtil.format(CalendarUtil.beginOfWeek(DateUtil.offsetWeek(DateUtil.date(),-x).toCalendar()).getTime(), DatePattern.NORM_DATE_PATTERN);
+        String weekEnd = DateUtil.format(CalendarUtil.endOfWeek(DateUtil.offsetWeek(DateUtil.date(),-x).toCalendar()).getTime(), DatePattern.NORM_DATE_PATTERN);
+        System.out.println("weekStart:"+weekStart);
+        System.out.println("weekEnd:"+weekEnd);
+        TermTime termTime = SchoolCalendarUtil.getTermTimeLocal();
+        System.out.println("TermStart:"+weekStart);
+        System.out.println("TermEnd:"+weekEnd);
     }
 
     @Test

@@ -45,10 +45,16 @@ public class TokenUtil {
         long expireTime = JWTUtil.parseToken(token).getPayloads().getLong("expire_time");
         return expireTime > System.currentTimeMillis() && JWTUtil.verify(token,TimerConfig.getTokenKeyByte());
     }
+    public static boolean Verify(String token,boolean passExpire) {
+        if (StrUtil.isBlankIfStr(token)) return false;
+        long expireTime = JWTUtil.parseToken(token).getPayloads().getLong("expire_time");
+        if(passExpire) return JWTUtil.verify(token,TimerConfig.getTokenKeyByte());
+        return expireTime > System.currentTimeMillis() && JWTUtil.verify(token,TimerConfig.getTokenKeyByte());
+    }
 
     public static boolean NotVerifyAdmin(HttpServletRequest request) {
         String token = request.getHeader("token");
-        if(!Verify(token)) return false;
+        if(!Verify(token,true)) return false;
         return JWTUtil.parseToken(token).getPayloads().getBool("isAdmin",false);
     }
 

@@ -35,6 +35,17 @@ public class TimerConfig {
      */
     public static String filePath;
 
+    /***
+     * 面向访问者的hostIp地址,用于文件链接创建<br>
+     * 默认值:192.168.49.66
+     */
+    public static String publicHost;
+
+    @Value("${timer.public-host:192.18.49.66}")
+    public void setPublicHost(String publicHost) {
+        TimerConfig.publicHost = publicHost;
+    }
+
     @Value("${timer.file-path}")
     public void setFilePath(String filePath) {
         TimerConfig.filePath = filePath;
