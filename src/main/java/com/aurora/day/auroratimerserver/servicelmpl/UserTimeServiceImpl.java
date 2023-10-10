@@ -8,8 +8,10 @@ import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.aurora.day.auroratimerserver.config.TimerConfig;
 import com.aurora.day.auroratimerserver.exceptions.TimeServicesException;
+import com.aurora.day.auroratimerserver.mapper.TargetTimeMapper;
 import com.aurora.day.auroratimerserver.mapper.UserMapper;
 import com.aurora.day.auroratimerserver.mapper.UserTimeMapper;
+import com.aurora.day.auroratimerserver.pojo.TargetTime;
 import com.aurora.day.auroratimerserver.pojo.Term;
 import com.aurora.day.auroratimerserver.pojo.TermTime;
 import com.aurora.day.auroratimerserver.pojo.UserTime;
@@ -32,14 +34,18 @@ public class UserTimeServiceImpl implements IUserTimeService {
     private static final Log logger = LogFactory.get();
 
     private final UserTimeMapper userTimeMapper;
+    private final TargetTimeMapper targetTimeMapper;
 
     @Override
     public boolean addTime(String id, int time) {
-        QueryWrapper<UserTime> wrapper = new QueryWrapper<>();
-        wrapper.eq(StrUtil.isBlankIfStr(id), "user_id", id)
-                .eq("record_date", DateUtil.today());
-        UserTime userTime = userTimeMapper.selectOne(wrapper);
         String today = DateUtil.today();
+        QueryWrapper<UserTime> wrapper = new QueryWrapper<>();
+
+        //查询今天上线记录
+        wrapper.eq( "user_id", id)
+                .eq("record_date", today);
+        UserTime userTime = userTimeMapper.selectOne(wrapper);
+
         String todayTime = DateUtil.now();
         long now = System.currentTimeMillis();
         //若今天没有登录
@@ -49,24 +55,23 @@ public class UserTimeServiceImpl implements IUserTimeService {
         } else {
             long recordTime = userTime.getLastRecordTime().getTime();
             long intervalTime = now - recordTime;
-            //若有人尝试在同个时间隔重复进行加时操作，则回拒
-            if (intervalTime < time) throw new TimeServicesException("请勿重复计时!");
             if (intervalTime < TimerConfig.intervalTime) {
+                //若有人尝试在同个时间隔重复进行加时操作，则回拒
+                if (intervalTime < time) throw new TimeServicesException("请勿重复计时!");
                 //正常情况，两次请求在设定间隔时间内(例如断线等网络波动没有持续更新在线时间)
                 //这种时候对打卡时间进行补时操作(此时添加的时间与time参数无关)
-                long onlineTime = userTime.getOnlineTime() + intervalTime;
+                long onlineTime = userTime.getOnlineTime() + (intervalTime / 1000);
                 userTime.setLastRecordTime(new Date(now));
                 userTime.setOnlineTime(onlineTime);
-                logger.info("用户:" + id + " 添加计时时长:" + (onlineTime / 1000) + "秒");
-                return userTimeMapper.updateById(userTime) == 1;
+                logger.info("用户:" + id + " 添加计时时长:" + onlineTime + "秒");
             } else {
                 //间隔时间过长，则判定为重新上线，不进行补时(增加参数time时间)
-                long onlineTime = userTime.getOnlineTime() + time * 1000L;
+                long onlineTime = userTime.getOnlineTime() + time;
                 userTime.setLastRecordTime(new Date(now));
                 userTime.setOnlineTime(onlineTime);
                 logger.info("用户:" + id + " 添加计时时长:" + time + "秒");
-                return userTimeMapper.updateById(userTime) == 1;
             }
+            return userTimeMapper.updateById(userTime) == 1;
         }
     }
 
@@ -83,6 +88,18 @@ public class UserTimeServiceImpl implements IUserTimeService {
         String TermStart = DateUtil.format(currentTerm.start,DatePattern.NORM_DATE_PATTERN);
         String TermEnd = DateUtil.format(currentTerm.end,DatePattern.NORM_DATE_PATTERN);
         return userTimeMapper.getRankTime(TermStart,TermEnd,weekStart,weekEnd);
+    }
+
+    @Override
+    public TargetTime getTargetTime() {
+        QueryWrapper<TargetTime> wrapper = new QueryWrapper<>();
+        wrapper.orderByDesc("create_time").last("limit 1");
+        return targetTimeMapper.selectOne(wrapper);
+    }
+
+    @Override
+    public boolean setTargetTime(float targetTime) {
+        return targetTimeMapper.insert(new TargetTime(targetTime)) == 1;
     }
 
 }

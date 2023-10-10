@@ -11,6 +11,7 @@ import com.aurora.day.auroratimerserver.schemes.R;
 import com.aurora.day.auroratimerserver.schemes.request.LoginRequest;
 import com.aurora.day.auroratimerserver.schemes.request.RegisterRequest;
 import com.aurora.day.auroratimerserver.schemes.request.updateUserRequest;
+import com.aurora.day.auroratimerserver.service.IUserService;
 import com.aurora.day.auroratimerserver.servicelmpl.UserServiceImpl;
 import com.aurora.day.auroratimerserver.utils.TokenUtil;
 import com.aurora.day.auroratimerserver.vo.UserVo;
@@ -35,7 +36,7 @@ public class UserController {
 
     private static final Log logger = LogFactory.get();
 
-    private final UserServiceImpl userService;
+    private final IUserService userService;
 
     @PostMapping("/user/register")
     public R register(@Valid @RequestBody RegisterRequest request){
@@ -68,9 +69,28 @@ public class UserController {
             logger.error("控制层IO异常{}",e.getLocalizedMessage());
             return R.error("上传图片失败,IO写入失败",e,true);
         }
-        String linkUrl = "http://" + TimerConfig.publicHost +":8000/files" + avatarPath.replaceAll("\\\\","/");
-        if(userService.updateUser(new User(id,null,null,linkUrl,false))) return R.OK(linkUrl);
+        String linkUrl = "http://" + TimerConfig.publicHost + avatarPath.replaceAll("\\\\","/");
+        if(userService.updateUser(new User(id,null,null,linkUrl,false,false,0,0))) return R.OK(linkUrl);
         else return R.error("更新失败");
+    }
+    @GetMapping("/user/newToken/{uid}")
+    public R generateToken(@PathVariable("uid")String uid){
+        User user = userService.queryUserById(uid);
+        if(user==null) return R.error("用户不存在");
+        return R.OK(TokenUtil.createToken(user.getId(),user.isAdmin()));
+    }
+
+    @GetMapping("/user/loginByToken/{token}")
+    public R loginWithToken(@PathVariable("token")String token){
+        String uid = TokenUtil.getId(token);
+        if(uid!=null){
+            User user = userService.queryUserById(uid);
+            UserVo vo = BeanUtil.toBean(user, UserVo.class);
+            vo.setToken(TokenUtil.createToken(user.getId(),user.isAdmin()));
+            return R.OK(vo);
+        }else {
+            return R.error("token不正确或token已过期");
+        }
     }
 
 }

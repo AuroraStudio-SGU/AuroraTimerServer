@@ -1,6 +1,9 @@
 package com.aurora.day.auroratimerserver.service;
 
 import com.aurora.day.auroratimerserver.pojo.User;
+import com.aurora.day.auroratimerserver.vo.UserVo;
+
+import java.util.List;
 
 public interface IUserService {
 
@@ -25,4 +28,24 @@ public interface IUserService {
      * @return 是否更新成功
      */
     boolean updateUser(User user);
+
+    /***
+     * 获取前3届人员
+     * @param year 届(例如21、23)
+     * @return 人员列表
+     */
+    List<UserVo> getCurrentUser(String year);
+
+    /***
+     * ignored
+     */
+    User queryUserById(String id);
+
+    /**
+     * 设置用户用时时长，下周清空
+     * @param id 用户id
+     * @param time 需要减的时长,单位：秒
+     * @return 是否成功
+     */
+    boolean setUserReduceTimeById(String id,long time);
 }

@@ -11,7 +11,8 @@ import java.util.List;
 
 @Mapper
 public interface UserTimeMapper extends BaseMapper<UserTime> {
-    @Select("select u.id as 'id' , u.name as 'name' , COALESCE(w.weekTime,0) as 'weekTime' ," +
+    //TODO 这里的sum计算未来还是使用cache的方式进行。
+    @Select("select u.id as 'id' , u.name as 'name' , u.reduce_time as 'reduceTime', u.unfinished_count as 'unfinishedCount' , COALESCE(w.weekTime,0) as 'weekTime' ," +
             "COALESCE(y.totalTime,0) as 'totalTime'" +
             "from user as u " +
             "left join (" +
@@ -25,7 +26,9 @@ public interface UserTimeMapper extends BaseMapper<UserTime> {
             "    from user_online_time" +
             "    where record_date between #{TermStart} and #{TermEnd}" +
             "    group by user_id" +
-            ") y on u.id = y.user_id")
+            ") y on u.id = y.user_id " +
+            "where u.afk = 0 "+
+            "order by w.weekTime desc ")
     List<UserOnlineTime> getRankTime(String TermStart, String TermEnd, String WeekStart, String WeekEnd);
 
 }

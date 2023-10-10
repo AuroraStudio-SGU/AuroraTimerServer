@@ -13,7 +13,6 @@ public class UserVo {
     private String avatar;
     private boolean admin;
     private long currentWeekTime;
-
     private String token;
 
 }

@@ -13,11 +13,9 @@ import java.util.Date;
 @NoArgsConstructor
 @TableName("notice_list")
 public class Notice {
-    @TableId("user_id")
+    @TableId("notice_id")
+    private String noticeId;
     private String userId;
-
     private String notice;
-    private Date targetTime;
-
     private Date updateTime;
 }

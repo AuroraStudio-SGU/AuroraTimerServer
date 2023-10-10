@@ -124,6 +124,7 @@ public class SchoolCalendarUtil {
         return parse.toJdkDate();
     }
 
+    //读取本地校历文件获得学期情况。
     public static TermTime getTermTimeLocal(){
         int year = DateUtil.thisYear();
         String CalendarYear = year-1+"-"+year;

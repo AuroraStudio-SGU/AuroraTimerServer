@@ -12,4 +12,6 @@ public class UserOnlineTime {
     private String name;
     private long totalTime;
     private long weekTime;
+    private long reduceTime;
+    private int unfinishedCount;
 }
