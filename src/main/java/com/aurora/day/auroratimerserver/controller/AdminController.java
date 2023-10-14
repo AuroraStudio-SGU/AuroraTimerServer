@@ -42,7 +42,7 @@ public class AdminController {
 
     @GetMapping("/admin/getNotice")
     public R getNotice(){
-        return R.OK(noticeService.getCurrenztNotice());
+        return R.OK(noticeService.getCurrentNotice());
     }
 
     @GetMapping("/admin/getCurrentUserList")
@@ -66,4 +66,10 @@ public class AdminController {
     public R setTargetTime(@PathVariable("hours")Float hours){
         return R.auto(userTimeService.setTargetTime(hours));
     }
+
+    @GetMapping("/admin/test")
+    public R check_ok(){
+        return R.OK();
+    }
+
 }

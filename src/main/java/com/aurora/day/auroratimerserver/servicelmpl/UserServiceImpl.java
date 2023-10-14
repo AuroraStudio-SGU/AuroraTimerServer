@@ -24,7 +24,7 @@ public class UserServiceImpl implements IUserService {
     public User registerUser(String id, String password,String name) {
         User temp = userMapper.selectById(id);
         if(temp!=null) throw new UserServicesException("该学号已被注册");
-        User user = new User(id,name,password, TimerConfig.avatarDefaultUrl, false,false,0,0);
+        User user = new User(id,name,password, TimerConfig.avatarDefaultUrl, false,false,0,0,null,null,null);
         if(userMapper.insert(user)!=1) throw new UserServicesException("插入数据库失败");
         return user;
     }

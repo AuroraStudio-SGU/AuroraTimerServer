@@ -14,5 +14,7 @@ public class UserVo {
     private boolean admin;
     private long currentWeekTime;
     private String token;
-
+    private String major;
+    private String grade;
+    private String work_group;
 }

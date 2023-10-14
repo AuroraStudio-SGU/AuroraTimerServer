@@ -21,6 +21,9 @@ public class User {
     private boolean afk;
     private long reduceTime;
     private int unfinishedCount;
+    private String major;
+    private String grade;
+    private String work_group;
 
     public UserVo toVo() {
         return BeanUtil.toBean(this, UserVo.class);

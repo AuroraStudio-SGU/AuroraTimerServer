@@ -13,9 +13,9 @@ public interface IUserTimeService {
      * 给用户添加计时时长
      * @param id 用户id
      * @param time 添加的时间,单位秒
-     * @return 是否添加成功
+     * @return 目前计时时长，单位秒
      */
-    boolean addTime(@NotNull String id, int time);
+    long addTime(@NotNull String id, int time);
     /**
      * 获取前x周的打卡列表
      * @param x 第前x周

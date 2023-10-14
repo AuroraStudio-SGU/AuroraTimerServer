@@ -52,7 +52,7 @@ public class R implements Serializable {
     public static R error(int code,String msg){return new R(code,msg,null); }
     public static R error(String msg,Object obj){return new R(100,msg,obj); }
 
-    public static R error(String msg,Exception e ,boolean isFullTrack){
+    public static R error(String msg,Throwable e ,boolean isFullTrack){
         JSONObject error = new JSONObject();
         error.set("reason", e.getLocalizedMessage());
         if(isFullTrack){

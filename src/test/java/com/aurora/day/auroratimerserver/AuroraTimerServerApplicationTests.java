@@ -1,28 +1,31 @@
 package com.aurora.day.auroratimerserver;
 
-import cn.hutool.core.date.CalendarUtil;
-import cn.hutool.core.date.DatePattern;
-import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.date.*;
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.http.HttpUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
 import com.aurora.day.auroratimerserver.config.TimerConfig;
+import com.aurora.day.auroratimerserver.mapper.DutyListMapper;
 import com.aurora.day.auroratimerserver.mapper.UserMapper;
 import com.aurora.day.auroratimerserver.mapper.UserTimeMapper;
 import com.aurora.day.auroratimerserver.pojo.TermTime;
+import com.aurora.day.auroratimerserver.pojo.User;
 import com.aurora.day.auroratimerserver.pojo.UserTime;
+import com.aurora.day.auroratimerserver.pojo.WeeklyDustList;
+import com.aurora.day.auroratimerserver.service.IDutyService;
+import com.aurora.day.auroratimerserver.service.IUserService;
 import com.aurora.day.auroratimerserver.servicelmpl.UserTimeServiceImpl;
 import com.aurora.day.auroratimerserver.utils.SchoolCalendarUtil;
 import com.aurora.day.auroratimerserver.vo.UserOnlineTime;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
-import java.text.DateFormat;
-import java.util.Calendar;
 import java.util.List;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,7 +34,11 @@ class AuroraTimerServerApplicationTests {
 
     @Autowired
     UserMapper userMapper;
+    @Autowired
+    IUserService userService;
 
+    @Autowired
+    IDutyService dutyService;
     @Test
     void contextLoads() {
         System.out.println(TimerConfig.tokenExpireTime);
@@ -96,11 +103,18 @@ class AuroraTimerServerApplicationTests {
     UserTimeServiceImpl userTimeService;
     @Test
     void mockTime(){
-        for (int i = 0; i < 365; i++) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.add(Calendar.DAY_OF_YEAR,i);
-            UserTime userTime = new UserTime("21125023000", DateUtil.format(calendar.getTime(), DatePattern.NORM_DATE_PATTERN),DateUtil.format(calendar.getTime(),DatePattern.NORM_DATETIME_PATTERN),14400L);
-            userTimeMapper.insert(userTime);
+        List<User> userList = userMapper.selectList(null);
+        Random random = new Random(114514L);
+        for (User user:userList){
+            for (int i = 0; i < random.nextInt(9)+1; i++) {
+                DateTime randomTime = RandomUtil.randomDate(DateUtil.parseDate("2023-05-28").toJdkDate(), DateField.DAY_OF_YEAR, 0, 360);
+                UserTime userTime = new UserTime(
+                        user.getId(),randomTime.toDateStr(),
+                        DateUtil.format(randomTime.toLocalDateTime(),DatePattern.NORM_DATETIME_PATTERN),
+                        random.nextInt(1000000)
+                );
+                userTimeMapper.insert(userTime);
+            }
         }
     }
 
@@ -119,5 +133,13 @@ class AuroraTimerServerApplicationTests {
         TermTime termTime = SchoolCalendarUtil.getTermTimeLocal();
         System.out.println("TermFirst:"+termTime.first);
         System.out.println("TermSecond:"+termTime.second);
+    }
+
+    @Autowired
+    DutyListMapper dutyListMapper;
+    @Test
+    void DutyList(){
+        QueryWrapper<WeeklyDustList> wrapper = new QueryWrapper<>();
+        System.out.println(dutyListMapper.selectList(null));
     }
 }
