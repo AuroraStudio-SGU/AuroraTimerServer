@@ -31,4 +31,7 @@ public interface UserTimeMapper extends BaseMapper<UserTime> {
             "order by w.weekTime desc ")
     List<UserOnlineTime> getRankTime(String TermStart, String TermEnd, String WeekStart, String WeekEnd);
 
+    @Select("select SUM(ut.online_time) from user_online_time as ut where record_date between #{week_start} and #{week_end} and user_id=#{id}")
+    Long queryUserWeekTime(String id,String week_start,String week_end);
+
 }

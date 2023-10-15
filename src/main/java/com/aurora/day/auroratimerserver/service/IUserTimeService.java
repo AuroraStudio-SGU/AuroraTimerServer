@@ -36,4 +36,11 @@ public interface IUserTimeService {
      */
     boolean setTargetTime(float targetTime);
 
+    /***
+     * 获取用户本周的打卡时间
+     * @param id 用户id
+     * @return 本周时长，单位：秒。
+     */
+    Long getUserWeekTimeById(String id);
+
 }

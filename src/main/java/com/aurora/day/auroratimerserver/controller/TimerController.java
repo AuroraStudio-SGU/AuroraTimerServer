@@ -39,7 +39,7 @@ public class TimerController {
     public R addTime(@PathVariable(name = "id") String id) {
         if (StrUtil.isBlankIfStr(id)) return R.error("参数为空");
         try {
-            return R.OK(userTimeService.addTime(id, 300));
+            return R.OK(userTimeService.addTime(id, 60));
         } catch (TimeServicesException e) {
             logger.warn("数据添加计时数据失败");
             return R.error("添加计时失败");
@@ -101,6 +101,13 @@ public class TimerController {
     @GetMapping("/getTargetTime")
     public R getTargetTime() {
         return R.OK(userTimeService.getTargetTime());
+    }
+
+    @GetMapping("/timer/getWeekTime/{id}")
+    public R getWeekTime(@PathVariable("id")String id){
+        Long time = userTimeService.getUserWeekTimeById(id);
+        if(time==null) time=0L;
+        return R.OK(time);
     }
 
 }

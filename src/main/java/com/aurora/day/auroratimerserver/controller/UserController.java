@@ -12,12 +12,14 @@ import com.aurora.day.auroratimerserver.schemes.request.LoginRequest;
 import com.aurora.day.auroratimerserver.schemes.request.RegisterRequest;
 import com.aurora.day.auroratimerserver.schemes.request.updateUserRequest;
 import com.aurora.day.auroratimerserver.service.IUserService;
+import com.aurora.day.auroratimerserver.service.IUserTimeService;
 import com.aurora.day.auroratimerserver.utils.TokenUtil;
 import com.aurora.day.auroratimerserver.vo.UserVo;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.io.File;
@@ -33,6 +35,7 @@ public class UserController {
     private static final Log logger = LogFactory.get();
 
     private final IUserService userService;
+    private final IUserTimeService userTimeService;
 
     @PostMapping("/user/register")
     public R register(@Valid @RequestBody RegisterRequest request) {
@@ -44,6 +47,9 @@ public class UserController {
     public R login(@Valid @RequestBody LoginRequest request) {
         User user = userService.loginUser(request.getId(), request.getPassword());
         UserVo vo = BeanUtil.toBean(user, UserVo.class);
+        Long time = userTimeService.getUserWeekTimeById(vo.getId());
+        if(time==null) time = 0L;
+        vo.setCurrentWeekTime(time);
         vo.setToken(TokenUtil.createToken(user.getId(), user.isAdmin()));
         return R.OK(vo);
     }
@@ -55,14 +61,14 @@ public class UserController {
     }
 
     @PostMapping("/user/uploadAvatar/{id}")
-    public R avatar(@RequestBody byte[] img, @PathVariable(name = "id") String id) {
-        if (img == null) return R.error("图片数据为空");
+    public R avatar(@RequestParam("file")MultipartFile file, @PathVariable(name = "id") String id) {
+        if (file == null) return R.error("图片数据为空");
         String fileName = "Avatar-" + id + ".png";
         String avatarPath = File.separator + "avatars" + File.separator + fileName;
         //若之前存在过头像则直接覆写
         File avatar = FileUtil.file(TimerConfig.filePath + avatarPath);
         try {
-            FileUtil.writeBytes(img, avatar);
+            FileUtil.writeBytes(file.getBytes(), avatar);
         } catch (Throwable e) {
             logger.error("控制层IO异常{}", e.getLocalizedMessage());
             return R.error("上传图片失败,IO写入失败", e, true);
@@ -85,7 +91,10 @@ public class UserController {
         String uid = TokenUtil.getId(token);
         if (uid != null) {
             User user = userService.queryUserById(uid);
+            Long time = userTimeService.getUserWeekTimeById(uid);
+            if(time==null) time = 0L;
             UserVo vo = BeanUtil.toBean(user, UserVo.class);
+            vo.setCurrentWeekTime(time);
             vo.setToken(TokenUtil.createToken(user.getId(), user.isAdmin()));
             return R.OK(vo);
         } else {
@@ -108,6 +117,13 @@ public class UserController {
         if(user==null) return R.error("404 user");
         if(user.getAvatar()==null) return R.OK(TimerConfig.avatarDefaultUrl);
         else return R.OK(user.getAvatar());
+    }
+
+    @GetMapping("/user/{id}")
+    public R queryUser(@PathVariable("id")String id){
+        User user = userService.queryUserById(id);
+        user.setPassword(null);
+        return R.OK(user);
     }
 
 }

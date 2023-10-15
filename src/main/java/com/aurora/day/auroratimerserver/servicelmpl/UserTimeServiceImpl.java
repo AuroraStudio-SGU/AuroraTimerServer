@@ -19,7 +19,9 @@ import com.aurora.day.auroratimerserver.vo.UserOnlineTime;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import reactor.util.annotation.Nullable;
 
+import java.text.DateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -49,6 +51,7 @@ public class UserTimeServiceImpl implements IUserTimeService {
         if (userTime == null) {
             userTime = new UserTime(id, today, todayTime, time);
             if(userTimeMapper.insert(userTime) != 1) throw new TimeServicesException("计时失败");
+            logger.info("用户:" + id + " 今日首次打卡:" + resultTime + "秒");
             return resultTime;
         } else {
             long recordTime = userTime.getLastRecordTime().getTime();
@@ -96,6 +99,15 @@ public class UserTimeServiceImpl implements IUserTimeService {
     @Override
     public boolean setTargetTime(float targetTime) {
         return targetTimeMapper.insert(new TargetTime(targetTime)) == 1;
+    }
+
+    @Nullable
+    @Override
+    public Long getUserWeekTimeById(String id) {
+        Date now = new Date();
+        String week_start = DateUtil.beginOfWeek(now).toString(DatePattern.NORM_DATE_PATTERN);
+        String week_end = DateUtil.endOfWeek(now).toString(DatePattern.NORM_DATE_PATTERN);
+        return userTimeMapper.queryUserWeekTime(id,week_start,week_end);
     }
 
 }

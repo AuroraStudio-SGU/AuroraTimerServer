@@ -6,7 +6,9 @@ import lombok.Data;
 public class updateUserRequest {
     private String id;
     private String name;
-    private String password;
     private String avatar;
-    private boolean admin;
+    private String major;
+    private String grade;
+    private String work_group;
+    private boolean afk;
 }
