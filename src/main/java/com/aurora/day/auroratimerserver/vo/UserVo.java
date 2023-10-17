@@ -1,5 +1,6 @@
 package com.aurora.day.auroratimerserver.vo;
 
+import cn.hutool.core.annotation.Alias;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,5 +17,6 @@ public class UserVo {
     private String token;
     private String major;
     private String grade;
+    @Alias("workGroup")
     private String work_group;
 }

@@ -40,12 +40,13 @@ public class UserController {
     @PostMapping("/user/register")
     public R register(@Valid @RequestBody RegisterRequest request) {
         User user = userService.registerUser(request.getId(), SecureUtil.md5(request.getPassword()), request.getName());
-        return R.OK(BeanUtil.toBean(user, UserVo.class));
+        return R.OK(user.toVo());
     }
 
     @PostMapping("/user/login")
     public R login(@Valid @RequestBody LoginRequest request) {
         User user = userService.loginUser(request.getId(), request.getPassword());
+        if(user==null) return R.error("账号或密码错误");
         UserVo vo = BeanUtil.toBean(user, UserVo.class);
         Long time = userTimeService.getUserWeekTimeById(vo.getId());
         if(time==null) time = 0L;
@@ -56,7 +57,9 @@ public class UserController {
 
     @PostMapping("/user/update")
     public R updateUser(@Valid @RequestBody updateUserRequest request) {
-        if (userService.updateUser(BeanUtil.toBean(request, User.class))) return R.OK();
+        User user = BeanUtil.toBean(request, User.class);
+        user.setWorkGroup(request.getWork_group());
+        if (userService.updateUser(user)) return R.OK();
         else return R.error("更新失败");
     }
 
@@ -122,8 +125,7 @@ public class UserController {
     @GetMapping("/user/{id}")
     public R queryUser(@PathVariable("id")String id){
         User user = userService.queryUserById(id);
-        user.setPassword(null);
-        return R.OK(user);
+        return R.OK(user.toVo());
     }
 
 }

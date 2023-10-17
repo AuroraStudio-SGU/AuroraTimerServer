@@ -10,7 +10,8 @@ import java.io.IOException;
 public class AdminInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws RuntimeException, IOException {
-        if (!TokenUtil.NotVerifyAdmin(request)) return true;
+        if (request.getMethod().equals("OPTIONS")) return true;//预检请求默认通过
+        if (TokenUtil.VerifyAdmin(request)) return true;
         else {
             response.sendError(403, "权限不足");
             return false;

@@ -39,7 +39,8 @@ public class TimerController {
     public R addTime(@PathVariable(name = "id") String id) {
         if (StrUtil.isBlankIfStr(id)) return R.error("参数为空");
         try {
-            return R.OK(userTimeService.addTime(id, 60));
+            userTimeService.addTime(id, 60);
+            return R.OK(userTimeService.getUserWeekTimeById(id));
         } catch (TimeServicesException e) {
             logger.warn("数据添加计时数据失败");
             return R.error("添加计时失败");

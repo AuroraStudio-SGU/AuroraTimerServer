@@ -39,12 +39,6 @@ public class AdminController {
         if(noticeService.updateNotice(request.toNotice(false))) return R.OK();
         else return R.error("更新失败");
     }
-
-    @GetMapping("/admin/getNotice")
-    public R getNotice(){
-        return R.OK(noticeService.getCurrentNotice());
-    }
-
     @GetMapping("/admin/getCurrentUserList")
     public R getCurrentUserList(){
         //取年份后两位，例如2023→23届

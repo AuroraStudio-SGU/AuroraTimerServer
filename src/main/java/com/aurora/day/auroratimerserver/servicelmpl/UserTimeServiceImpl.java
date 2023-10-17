@@ -17,6 +17,7 @@ import com.aurora.day.auroratimerserver.service.IUserTimeService;
 import com.aurora.day.auroratimerserver.utils.SchoolCalendarUtil;
 import com.aurora.day.auroratimerserver.vo.UserOnlineTime;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.util.annotation.Nullable;
@@ -54,6 +55,10 @@ public class UserTimeServiceImpl implements IUserTimeService {
             logger.info("用户:" + id + " 今日首次打卡:" + resultTime + "秒");
             return resultTime;
         } else {
+            UpdateWrapper<UserTime> updateWrapper = new UpdateWrapper<>();
+            updateWrapper.eq("user_id",id);
+            updateWrapper.eq("record_date",today);
+
             long recordTime = userTime.getLastRecordTime().getTime();
             long intervalTime = now - recordTime;
             if (intervalTime < TimerConfig.intervalTime * 1000L) {
@@ -68,8 +73,9 @@ public class UserTimeServiceImpl implements IUserTimeService {
                 userTime.setLastRecordTime(new Date(now));
                 userTime.setOnlineTime(resultTime);
             }
+            updateWrapper.set("online_time",resultTime);
             logger.info("用户:" + id + " 添加计时时长:" + resultTime + "秒");
-            if(userTimeMapper.updateById(userTime) != 1) throw new TimeServicesException("计时失败");
+            if(userTimeMapper.update(userTime,updateWrapper) != 1) throw new TimeServicesException("计时失败");
             return resultTime;
         }
     }
