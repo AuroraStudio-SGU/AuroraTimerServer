@@ -1,9 +1,8 @@
 package com.aurora.day.auroratimerserver.pojo;
 
-import cn.hutool.core.annotation.Alias;
 import cn.hutool.core.bean.BeanUtil;
+import com.aurora.day.auroratimerserver.config.TimerConfig;
 import com.aurora.day.auroratimerserver.vo.UserVo;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,6 +28,20 @@ public class User {
 
     public UserVo toVo() {
         return BeanUtil.toBean(this, UserVo.class);
+    }
+
+    public User(String id,String name,String password){
+        this.id = id;
+        this.name = name;
+        this.password = password;
+        this.avatar = TimerConfig.avatarDefaultUrl;
+        this.admin = false;
+        this.afk = false;
+        this.reduceTime = 0;
+        this.unfinishedCount = 0;
+        this.major = "待填写";
+        this.grade = "待填写";
+        this.workGroup = "待填写";
     }
 
 }

@@ -2,6 +2,7 @@ package com.aurora.day.auroratimerserver.schemes;
 
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
+import com.aurora.day.auroratimerserver.schemes.eums.ResponseState;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -49,12 +50,17 @@ public class R implements Serializable {
         return new R(100, msg, null);
     }
 
+    public static R error(ResponseState state, String msg){
+        return new R(state.getCode(),msg,null);
+    }
+
     public static R error(int code,String msg){return new R(code,msg,null); }
     public static R error(String msg,Object obj){return new R(100,msg,obj); }
 
     public static R error(String msg,Throwable e ,boolean isFullTrack){
         JSONObject error = new JSONObject();
-        error.set("reason", e.getLocalizedMessage());
+        String error_msg = e.getLocalizedMessage();
+        error.set("reason", error_msg==null?"大概率是空指针,总之没有消息":error_msg);
         if(isFullTrack){
             error.set("stacks", e.getStackTrace());
         }else {

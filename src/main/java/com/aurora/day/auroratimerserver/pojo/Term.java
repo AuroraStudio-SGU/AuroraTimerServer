@@ -2,19 +2,35 @@ package com.aurora.day.auroratimerserver.pojo;
 
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.Random;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@TableName("term")
 public class Term {
-    public int days;
+    @TableId(value = "id",type = IdType.AUTO)
+    private Integer id;
+    @TableField(exist = false)
+    public Integer days;
     public Date start;
     public Date end;
+
+
+    public Term(int days, Date start, Date end) {
+        this.days = days;
+        this.start = start;
+        this.end = end;
+    }
 
     @Override
     public String toString() {

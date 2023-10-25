@@ -30,11 +30,11 @@ public interface IUserService {
     boolean updateUser(User user);
 
     /***
-     * 获取前3届人员
-     * @param year 届(例如21、23)
+     * 获取全部人员
+     * @param needAfk 是否需要已退休的
      * @return 人员列表
      */
-    List<UserVo> getCurrentUser(String year);
+    List<User> getUserList(boolean needAfk);
 
     /***
      * ignored

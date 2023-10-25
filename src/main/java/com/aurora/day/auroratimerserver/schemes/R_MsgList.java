@@ -1,5 +1,6 @@
 package com.aurora.day.auroratimerserver.schemes;
 
+import com.aurora.day.auroratimerserver.schemes.eums.ResponseState;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -25,7 +26,7 @@ public class R_MsgList {
         this.msgList = msgList;
     }
     public static R_MsgList error(String msg) {
-        return new R_MsgList(101, msg);
+        return new R_MsgList(ResponseState.IllegalArgument.getCode(), msg);
     }
 
 }

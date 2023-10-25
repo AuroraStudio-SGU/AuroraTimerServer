@@ -1,9 +1,9 @@
 package com.aurora.day.auroratimerserver.handler;
 
-import cn.hutool.json.JSONObject;
 import com.aurora.day.auroratimerserver.exceptions.UserServicesException;
 import com.aurora.day.auroratimerserver.schemes.R;
 import com.aurora.day.auroratimerserver.schemes.R_MsgList;
+import com.aurora.day.auroratimerserver.schemes.eums.ResponseState;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
@@ -50,7 +50,7 @@ public class BadRequestExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public R GlobalException(Exception e) {
-        return R.error("未分类错误", e,false);
+        return R.error(ResponseState.ERROR.getMsg(), e,true);
     }
 
 

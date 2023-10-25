@@ -24,7 +24,7 @@ public class UserServiceImpl implements IUserService {
     public User registerUser(String id, String password,String name) {
         User temp = userMapper.selectById(id);
         if(temp!=null) throw new UserServicesException("该学号已被注册");
-        User user = new User(id,name,password, TimerConfig.avatarDefaultUrl, false,false,0,0,null,null,null);
+        User user = new User(id,name,password);
         if(userMapper.insert(user)!=1) throw new UserServicesException("插入数据库失败");
         return user;
     }
@@ -46,17 +46,11 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public List<UserVo> getCurrentUser(String year) {
-        int targetYear = Integer.parseInt(year);
-        List<UserVo> list = new ArrayList<>();
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.likeRight("id",targetYear)
-                    .or(userQueryWrapper -> userQueryWrapper.likeRight("id",targetYear-1))
-                    .or(userQueryWrapper -> userQueryWrapper.likeRight("id",targetYear-2))
-                    .or(userQueryWrapper -> userQueryWrapper.likeRight("id",targetYear-3));
-        userMapper.selectList(queryWrapper).forEach(u->list.add(u.toVo()));
-
-        return list;
+    public List<User> getUserList(boolean needAfk) {
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
+        wrapper.eq(needAfk,"afk",false);
+        wrapper.select(User.class, i->!i.getColumn().equals("password"));
+        return userMapper.selectList(wrapper);
     }
 
     @Override

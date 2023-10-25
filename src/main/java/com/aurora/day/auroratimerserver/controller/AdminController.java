@@ -1,13 +1,12 @@
 package com.aurora.day.auroratimerserver.controller;
 
 import cn.hutool.core.date.DateUtil;
+import com.aurora.day.auroratimerserver.pojo.Term;
 import com.aurora.day.auroratimerserver.schemes.R;
 import com.aurora.day.auroratimerserver.schemes.request.UpLoadNoticeRequest;
 import com.aurora.day.auroratimerserver.schemes.request.setDutyRequest;
-import com.aurora.day.auroratimerserver.service.IDutyService;
-import com.aurora.day.auroratimerserver.service.INoticeService;
-import com.aurora.day.auroratimerserver.service.IUserService;
-import com.aurora.day.auroratimerserver.service.IUserTimeService;
+import com.aurora.day.auroratimerserver.schemes.request.updateTermRequest;
+import com.aurora.day.auroratimerserver.service.*;
 import com.aurora.day.auroratimerserver.servicelmpl.NoticeServiceImpl;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +27,7 @@ public class AdminController {
     private final IUserService userService;
     private final IDutyService dutyService;
     private final IUserTimeService userTimeService;
+    private final ITermService termService;
 
     @PostMapping("/admin/uploadNotice")
     public R notice(@Valid @RequestBody UpLoadNoticeRequest request){
@@ -39,11 +39,9 @@ public class AdminController {
         if(noticeService.updateNotice(request.toNotice(false))) return R.OK();
         else return R.error("更新失败");
     }
-    @GetMapping("/admin/getCurrentUserList")
-    public R getCurrentUserList(){
-        //取年份后两位，例如2023→23届
-        String year = String.valueOf(DateUtil.year(DateUtil.date())).substring(2,4);
-        return R.OK(userService.getCurrentUser(year));
+    @GetMapping("/admin/queryAllUser")
+    public R getUserList(@RequestParam(value = "withAFK",defaultValue = "false")boolean withAFK){
+        return R.OK(userService.getUserList(withAFK));
     }
 
     @PostMapping("/admin/setDuty")
@@ -65,5 +63,20 @@ public class AdminController {
     public R check_ok(){
         return R.OK();
     }
+
+    @GetMapping("/admin/syncTimeFromOldData")
+    public R syncDate(@RequestParam(value = "start",required = false)String start,@RequestParam(value = "end",required = false)String end){
+        return R.OK(userTimeService.transferOldTime(start,end));
+    }
+
+    @GetMapping("/admin/queryAllTerm")
+    public R queryAllTerm(){
+        return R.OK(termService.getAllTerms());
+    }
+    @PostMapping("/admin/updateTerm")
+    public R updateTerm(@Valid updateTermRequest request){
+        return R.auto(termService.updateTermById(request.toTerm()));
+    }
+
 
 }

@@ -3,7 +3,6 @@ package com.aurora.day.auroratimerserver.service;
 
 import com.aurora.day.auroratimerserver.pojo.TargetTime;
 import com.aurora.day.auroratimerserver.vo.UserOnlineTime;
-import com.aurora.day.auroratimerserver.vo.UserTimeVo;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -11,13 +10,16 @@ import java.util.List;
 public interface IUserTimeService {
     /**
      * 给用户添加计时时长
-     * @param id 用户id
+     *
+     * @param id   用户id
      * @param time 添加的时间,单位秒
      * @return 目前计时时长，单位秒
      */
     long addTime(@NotNull String id, int time);
+
     /**
      * 获取前x周的打卡列表
+     *
      * @param x 第前x周
      * @return 打卡列表
      */
@@ -42,5 +44,13 @@ public interface IUserTimeService {
      * @return 本周时长，单位：秒。
      */
     Long getUserWeekTimeById(String id);
+
+    /***
+     * 将旧的数据迁移到新数据库当中
+     * @param start 开始时间
+     * @param end 结束时间
+     * @return 是否成功
+     */
+    boolean transferOldTime(String start, String end);
 
 }

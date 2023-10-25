@@ -8,6 +8,7 @@ import cn.hutool.log.LogFactory;
 import com.aurora.day.auroratimerserver.config.TimerConfig;
 import com.aurora.day.auroratimerserver.pojo.User;
 import com.aurora.day.auroratimerserver.schemes.R;
+import com.aurora.day.auroratimerserver.schemes.eums.ResponseState;
 import com.aurora.day.auroratimerserver.schemes.request.LoginRequest;
 import com.aurora.day.auroratimerserver.schemes.request.RegisterRequest;
 import com.aurora.day.auroratimerserver.schemes.request.updateUserRequest;
@@ -46,7 +47,7 @@ public class UserController {
     @PostMapping("/user/login")
     public R login(@Valid @RequestBody LoginRequest request) {
         User user = userService.loginUser(request.getId(), request.getPassword());
-        if(user==null) return R.error("账号或密码错误");
+        if(user==null) return R.error(ResponseState.IllegalArgument,"账号或密码错误");
         UserVo vo = BeanUtil.toBean(user, UserVo.class);
         Long time = userTimeService.getUserWeekTimeById(vo.getId());
         if(time==null) time = 0L;
@@ -60,12 +61,12 @@ public class UserController {
         User user = BeanUtil.toBean(request, User.class);
         user.setWorkGroup(request.getWork_group());
         if (userService.updateUser(user)) return R.OK();
-        else return R.error("更新失败");
+        else return R.error(ResponseState.DateBaseError, ResponseState.DateBaseError.appendGet("数据库更新失败"));
     }
 
     @PostMapping("/user/uploadAvatar/{id}")
     public R avatar(@RequestParam("file")MultipartFile file, @PathVariable(name = "id") String id) {
-        if (file == null) return R.error("图片数据为空");
+        if (file == null) return R.error(ResponseState.IllegalArgument,"图片数据为空");
         String fileName = "Avatar-" + id + ".png";
         String avatarPath = File.separator + "avatars" + File.separator + fileName;
         //若之前存在过头像则直接覆写
@@ -79,13 +80,13 @@ public class UserController {
         String linkUrl = "http://" + TimerConfig.publicHost + avatarPath.replaceAll("\\\\", "/");
         if (userService.updateUser(new User(id, null, null, linkUrl, false, false, 0, 0, null, null, null)))
             return R.OK(linkUrl);
-        else return R.error("更新失败");
+        else return R.error(ResponseState.DateBaseError, ResponseState.DateBaseError.appendGet("数据库更新失败"));
     }
 
     @GetMapping("/user/newToken/{uid}")
     public R generateToken(@PathVariable("uid") String uid) {
         User user = userService.queryUserById(uid);
-        if (user == null) return R.error("用户不存在");
+        if (user == null) return R.error(ResponseState.IllegalArgument,"用户不存在");
         return R.OK(TokenUtil.createToken(user.getId(), user.isAdmin()));
     }
 
@@ -101,23 +102,23 @@ public class UserController {
             vo.setToken(TokenUtil.createToken(user.getId(), user.isAdmin()));
             return R.OK(vo);
         } else {
-            return R.error("token不正确或token已过期");
+            return R.error(ResponseState.AuthorizationError,"token不正确或token已过期");
         }
     }
 
     @GetMapping("/user/resetPassword/{id}")
-    public R resetPwd(@PathVariable("id") String id) {
+    public R resetPwd(@PathVariable("id") String id,@RequestParam("pwd")String pwd) {
         User user = userService.queryUserById(id);
-        if (user == null) return R.error("用户不存在");
-        user.setPassword(SecureUtil.md5("123456"));
+        if (user == null) return R.error(ResponseState.IllegalArgument,"用户不存在");
+        user.setPassword(SecureUtil.md5(pwd));
         userService.updateUser(user);
-        return R.OK("重置成功，新密码为123456");
+        return R.OK("重置成功，新密码为"+pwd);
     }
 
     @GetMapping("/user/avatar/{id}")
     public R getAvatar(@PathVariable("id")String id){
         User user = userService.queryUserById(id);
-        if(user==null) return R.error("404 user");
+        if(user==null) return R.error(ResponseState.IllegalArgument,"用户不存在");
         if(user.getAvatar()==null) return R.OK(TimerConfig.avatarDefaultUrl);
         else return R.OK(user.getAvatar());
     }

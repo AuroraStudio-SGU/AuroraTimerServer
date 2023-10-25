@@ -1,5 +1,6 @@
 package com.aurora.day.auroratimerserver.servicelmpl;
 
+import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.id.NanoId;
@@ -39,8 +40,9 @@ public class NoticeServiceImpl implements INoticeService {
     public Notice getCurrentNotice() {
         QueryWrapper<Notice> wrapper = new QueryWrapper<>();
         Date now = DateUtil.date();
+        //截止本周周日19点的公告
         String start = DateUtil.beginOfWeek(now).toString(DatePattern.NORM_DATE_PATTERN);
-        String end = DateUtil.endOfWeek(now).toString(DatePattern.NORM_DATE_PATTERN);
+        String end = DateUtil.endOfWeek(now).setField(DateField.HOUR,19).toString(DatePattern.NORM_DATE_PATTERN);
         wrapper.between("update_time",start,end)
                 .orderByDesc("update_time")
                 .last("limit 1");

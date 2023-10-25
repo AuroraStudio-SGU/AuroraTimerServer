@@ -7,6 +7,7 @@ import com.aurora.day.auroratimerserver.cache.RankCache;
 import com.aurora.day.auroratimerserver.exceptions.TimeServicesException;
 import com.aurora.day.auroratimerserver.pojo.WeeklyDustList;
 import com.aurora.day.auroratimerserver.schemes.R;
+import com.aurora.day.auroratimerserver.schemes.eums.ResponseState;
 import com.aurora.day.auroratimerserver.service.IDutyService;
 import com.aurora.day.auroratimerserver.service.INoticeService;
 import com.aurora.day.auroratimerserver.service.IUserTimeService;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -43,14 +45,14 @@ public class TimerController {
             return R.OK(userTimeService.getUserWeekTimeById(id));
         } catch (TimeServicesException e) {
             logger.warn("数据添加计时数据失败");
-            return R.error("添加计时失败");
+            return R.error(ResponseState.ERROR,"添加计时失败");
         }
     }
 
     //查询某周的打卡情况。
     @GetMapping("/timer/lastXWeek/{x}")
     public R lastXWeek(@PathVariable(name = "x") String x) {
-        if (!StrUtil.isNumeric(x)) return R.error("非法参数!");
+        if (!StrUtil.isNumeric(x)) return R.error(ResponseState.IllegalArgument,"非法参数!");
         return R.OK(userTimeService.getTimeRank(Integer.parseInt(x)));
     }
 
@@ -68,12 +70,24 @@ public class TimerController {
 
     private final RankCache LastCache = new RankCache();
 
-    //返回最后3位
+    /*
+        做了个小缓存，现在的逻辑是返回不满足打卡要求的最后三位，算上减时的
+     */
     @GetMapping("/timer/last3")
     public R last_3() {
         if (LastCache.isEmpty() || !LastCache.isCurrentWeek()) {
+            long currentTargetTime =(long)userTimeService.getTargetTime().getTargetTime()*3600L;
             List<UserOnlineTime> list = userTimeService.getTimeRank(1);
-            LastCache.setList(list.subList(Math.max(list.size() - 3, 0), list.size()));
+            List<UserOnlineTime> LastRank = new ArrayList<>(3);
+            for (int i = list.size()-1; i >=0 ; i--) {
+                UserOnlineTime userTime = list.get(i);
+                long time = userTime.getWeekTime() + userTime.getReduceTime();
+                if(Math.abs(time)<currentTargetTime){
+                    LastRank.add(userTime);
+                    if(LastRank.size()==3) break;
+                }
+            }
+            LastCache.setList(LastRank);
             LastCache.setUpdateTime(new Date());
         }
         return R.OK(LastCache.getList());
@@ -94,7 +108,7 @@ public class TimerController {
     public R getDustList() {
         WeeklyDustList dust = dutyService.getNewestDust();
         if (dust == null) {
-            return R.error("没有值日表");
+            return R.error(ResponseState.DateBaseError,"没有值日表");
         }
         return R.OK(dust);
     }

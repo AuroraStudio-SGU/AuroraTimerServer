@@ -68,7 +68,8 @@ public class TimerConfig {
         TimerConfig.publicHost = publicHost;
     }
 
-    @Value("${timer.file-path}")
+    //    @Value("${timer.filePath:/home/auroratimer}")
+    @Value("${timer.filePath}")
     public void setFilePath(String filePath) {
         TimerConfig.filePath = filePath;
     }

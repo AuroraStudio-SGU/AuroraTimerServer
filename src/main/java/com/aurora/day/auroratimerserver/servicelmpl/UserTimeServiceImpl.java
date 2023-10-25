@@ -7,22 +7,20 @@ import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.aurora.day.auroratimerserver.config.TimerConfig;
 import com.aurora.day.auroratimerserver.exceptions.TimeServicesException;
+import com.aurora.day.auroratimerserver.mapper.OldUserTimeMapper;
 import com.aurora.day.auroratimerserver.mapper.TargetTimeMapper;
 import com.aurora.day.auroratimerserver.mapper.UserTimeMapper;
-import com.aurora.day.auroratimerserver.pojo.TargetTime;
-import com.aurora.day.auroratimerserver.pojo.Term;
-import com.aurora.day.auroratimerserver.pojo.TermTime;
-import com.aurora.day.auroratimerserver.pojo.UserTime;
+import com.aurora.day.auroratimerserver.pojo.*;
 import com.aurora.day.auroratimerserver.service.IUserTimeService;
 import com.aurora.day.auroratimerserver.utils.SchoolCalendarUtil;
 import com.aurora.day.auroratimerserver.vo.UserOnlineTime;
+import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.util.annotation.Nullable;
 
-import java.text.DateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -34,6 +32,7 @@ public class UserTimeServiceImpl implements IUserTimeService {
 
     private final UserTimeMapper userTimeMapper;
     private final TargetTimeMapper targetTimeMapper;
+    private final OldUserTimeMapper oldUserTimeMapper;
 
     @Override
     public long addTime(String id, int time) {
@@ -51,13 +50,13 @@ public class UserTimeServiceImpl implements IUserTimeService {
         //若今天没有登录
         if (userTime == null) {
             userTime = new UserTime(id, today, todayTime, time);
-            if(userTimeMapper.insert(userTime) != 1) throw new TimeServicesException("计时失败");
+            if (userTimeMapper.insert(userTime) != 1) throw new TimeServicesException("计时失败");
             logger.info("用户:" + id + " 今日首次打卡:" + resultTime + "秒");
             return resultTime;
         } else {
             UpdateWrapper<UserTime> updateWrapper = new UpdateWrapper<>();
-            updateWrapper.eq("user_id",id);
-            updateWrapper.eq("record_date",today);
+            updateWrapper.eq("user_id", id);
+            updateWrapper.eq("record_date", today);
 
             long recordTime = userTime.getLastRecordTime().getTime();
             long intervalTime = now - recordTime;
@@ -73,9 +72,9 @@ public class UserTimeServiceImpl implements IUserTimeService {
                 userTime.setLastRecordTime(new Date(now));
                 userTime.setOnlineTime(resultTime);
             }
-            updateWrapper.set("online_time",resultTime);
+            updateWrapper.set("online_time", resultTime);
             logger.info("用户:" + id + " 添加计时时长:" + resultTime + "秒");
-            if(userTimeMapper.update(userTime,updateWrapper) != 1) throw new TimeServicesException("计时失败");
+            if (userTimeMapper.update(userTime, updateWrapper) != 1) throw new TimeServicesException("计时失败");
             return resultTime;
         }
     }
@@ -113,7 +112,39 @@ public class UserTimeServiceImpl implements IUserTimeService {
         Date now = new Date();
         String week_start = DateUtil.beginOfWeek(now).toString(DatePattern.NORM_DATE_PATTERN);
         String week_end = DateUtil.endOfWeek(now).toString(DatePattern.NORM_DATE_PATTERN);
-        return userTimeMapper.queryUserWeekTime(id,week_start,week_end);
+        return userTimeMapper.queryUserWeekTime(id, week_start, week_end);
+    }
+
+    @Override
+    public boolean transferOldTime(String start, String end) {
+        if (start == null || end == null) {
+            TermTime termTime = SchoolCalendarUtil.getTermTime();
+            if (termTime == null) {
+                logger.error("学历获取失败");
+                return false;
+            }
+            start = DateUtil.format(termTime.getCurrentTerm().start, DatePattern.NORM_DATE_PATTERN);
+            end = DateUtil.format(termTime.getCurrentTerm().end, DatePattern.NORM_DATE_PATTERN);
+        }
+        boolean success = true;
+        try {
+            DynamicDataSourceContextHolder.push("oldtimer");
+            List<OldUserTime> list = oldUserTimeMapper.queryOldTimeByDate(start, end);
+            DynamicDataSourceContextHolder.poll();
+            for (OldUserTime userTime : list) {
+                UserTime NewTime = new UserTime();
+                NewTime.setUserId(userTime.getId());
+                NewTime.setRecordDate(userTime.getTodayDate());
+                NewTime.setLastRecordTime(new Date(userTime.getTodayDate().getTime()+userTime.getLastOnlineTime().getTime()));
+                NewTime.setOnlineTime(userTime.getTodayOnlineTime() / 1000L);
+                userTimeMapper.insert(NewTime);
+            }
+        } catch (Throwable t) {
+            logger.error("数据转移异常");
+            logger.error(t);
+            success = false;
+        }
+        return success;
     }
 
 }
