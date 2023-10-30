@@ -37,7 +37,9 @@ public interface IUserService {
     List<User> getUserList(boolean needAfk);
 
     /***
-     * ignored
+     * 根据用户id查找用户
+     * @param id 用户id
+     * @return 用户对象(不安全)
      */
     User queryUserById(String id);
 
@@ -48,4 +50,11 @@ public interface IUserService {
      * @return 是否成功
      */
     boolean setUserReduceTimeById(String id,long time);
+
+    /**
+     * 删除一个用户，包括其打卡记录
+     * @param user 用户对象
+     * @return 是否删除成功
+     */
+    boolean deleteUser(User user);
 }

@@ -27,7 +27,8 @@ public interface UserTimeMapper extends BaseMapper<UserTime> {
             "    where record_date between #{TermStart} and #{TermEnd}" +
             "    group by user_id" +
             ") y on u.id = y.user_id " +
-            "where u.afk = 0 "+
+            "where u.afk = 0 " +
+            "or weekTime!=0 "+
             "order by w.weekTime desc ")
     List<UserOnlineTime> getRankTime(String TermStart, String TermEnd, String WeekStart, String WeekEnd);
 

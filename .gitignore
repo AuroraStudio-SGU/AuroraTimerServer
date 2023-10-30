@@ -8,6 +8,7 @@
 
 # server config file
 src/main/resources/application-server.properties
+src/main/resources/application-server2.yml
 
 # Ignore Gradle GUI config
 gradle-app.setting

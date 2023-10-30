@@ -53,7 +53,7 @@ public class SwaggerConfig {
         String[] packagedToMatch = { "com.aurora.day.auroratimerserver" };
         return GroupedOpenApi.builder().group("swagger-config")
                 .pathsToMatch(paths)
-                .addOperationCustomizer((operation, handlerMethod) -> operation.addParametersItem(new HeaderParameter().name("groupCode").example("测试").description("集团code").schema(new StringSchema()._default("BR").name("groupCode").description("集团code"))))
+                .addOperationCustomizer((operation, handlerMethod) -> operation.addParametersItem(new HeaderParameter().name("groupCode").example("极光工作室").description("极光工作室·API").schema(new StringSchema()._default("AuroraTimer").name("groupCode").description("AuroraTimer"))))
                 .packagesToScan(packagedToMatch).build();
     }
     @Bean

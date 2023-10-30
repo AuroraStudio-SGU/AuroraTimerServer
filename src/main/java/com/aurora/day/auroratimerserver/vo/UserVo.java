@@ -14,6 +14,7 @@ public class UserVo {
     private String avatar;//头像地址
     private boolean admin;//是否为管理员
     private long currentWeekTime;//本周打卡时长
+    private boolean afk;//是否退休
     private String token;//token
     private String major;//专业
     private String grade;//年级
