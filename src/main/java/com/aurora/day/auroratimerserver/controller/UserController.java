@@ -19,6 +19,8 @@ import com.aurora.day.auroratimerserver.vo.UserVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -40,18 +42,22 @@ public class UserController {
 
     private final IUserService userService;
     private final IUserTimeService userTimeService;
-    @Operation(summary = "注册用户")
+    @Operation(summary = "注册用户",requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "用户注册实体类",content = @Content(schema = @Schema(implementation = RegisterRequest.class))
+    ))
     @PostMapping("/user/register")
     public R register(@Valid @RequestBody RegisterRequest request) {
-        User user = userService.registerUser(request.getId(), SecureUtil.md5(request.getPassword()), request.getName());
+        User user = userService.registerUser(request.toUser());
         return R.OK(user.toVo());
     }
 
-    @Operation(summary = "登录")
+    @Operation(summary = "登录",requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "用户登录实体类",content = @Content(schema = @Schema(implementation = LoginRequest.class))
+    ))
     @PostMapping("/user/login")
     public R login(@Valid @RequestBody LoginRequest request) {
         User user = userService.loginUser(request.getId(), request.getPassword());
-        if (user == null) return R.error(ResponseState.IllegalArgument, "账号或密码错误");
+        if (user == null) return R.error(ResponseState.IllegalArgument.replaceMsg("账号或密码错误"));
         UserVo vo = BeanUtil.toBean(user, UserVo.class);
         Long time = userTimeService.getUserWeekTimeById(vo.getId());
         if (time == null) time = 0L;
@@ -60,13 +66,15 @@ public class UserController {
         return R.OK(vo);
     }
 
-    @Operation(summary = "更新用户对象")
+    @Operation(summary = "更新用户",requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "用户实体类",content = @Content(schema = @Schema(implementation = updateUserRequest.class))
+    ))
     @PostMapping("/user/update")
     public R updateUser(@Valid @RequestBody updateUserRequest request) {
         User user = BeanUtil.toBean(request, User.class);
         user.setWorkGroup(request.getWork_group());
         if (userService.updateUser(user)) return R.OK();
-        else return R.error(ResponseState.DateBaseError, ResponseState.DateBaseError.appendGet("数据库更新失败"));
+        else return R.error(ResponseState.DateBaseError, ResponseState.DateBaseError.appendMsg("数据库更新失败"));
     }
 
     @Operation(summary = "修改用户头像",parameters = {
@@ -84,12 +92,12 @@ public class UserController {
             FileUtil.writeBytes(file.getBytes(), avatar);
         } catch (Throwable e) {
             logger.error("控制层IO异常{}", e.getLocalizedMessage());
-            return R.error("上传图片失败,IO写入失败", e, true);
+            return R.error(ResponseState.ERROR.replaceMsg("上传图片失败,IO写入失败"), e, true);
         }
         String linkUrl = "http://" + TimerConfig.publicHost + avatarPath.replaceAll("\\\\", "/");
         if (userService.updateUser(new User(id, null, null, linkUrl, false, false, 0, 0, null, null, null)))
             return R.OK(linkUrl);
-        else return R.error(ResponseState.DateBaseError, ResponseState.DateBaseError.appendGet("数据库更新失败"));
+        else return R.error(ResponseState.DateBaseError, ResponseState.DateBaseError.appendMsg("数据库更新失败"));
     }
 
     @Operation(summary = "创建新Token",parameters = {

@@ -35,15 +35,15 @@ public class AdminController {
     @PostMapping("/admin/uploadNotice")
     public R notice(@Valid @RequestBody UpLoadNoticeRequest request) {
         if (noticeService.insertNotice(request.toNotice())) return R.OK();
-        else return R.error("上传失败");
+        else return R.error(ResponseState.DateBaseError);
     }
 
     @Operation(summary = "修改公告(需要传入notice_id)")
     @PostMapping("/admin/modifyNotice")
     public R modifyNotice(@Valid @RequestBody UpLoadNoticeRequest request) {
-        if (request.getNotice_id() == null) return R.error(ResponseState.IllegalArgument, "公告id为空");
+        if (request.getNotice_id() == null) return R.error(ResponseState.IllegalArgument.replaceMsg("公告id为空"));
         if (noticeService.updateNotice(request.toNotice(false))) return R.OK();
-        else return R.error("更新失败");
+        else return R.error(ResponseState.DateBaseError);
     }
 
     @Operation(summary = "查询所有用户", parameters = {
@@ -88,12 +88,16 @@ public class AdminController {
     @Operation(summary = "从旧计时器同步计时情况到新的",
             parameters = {
                     @Parameter(name = "start", description = "起始时间(为空则为本学期)"),
-                    @Parameter(name = "end", description = "结尾时间(为空则为本学期)")
+                    @Parameter(name = "end", description = "结尾时间(为空则为本学期)"),
+                    @Parameter(name = "id",description = "指定id",in = ParameterIn.PATH)
             }
     )
-    @GetMapping("/admin/syncTimeFromOldData")
-    public R syncDate(@RequestParam(value = "start", required = false) String start, @RequestParam(value = "end", required = false) String end) {
-        return R.OK(userTimeService.transferOldTime(start, end));
+    @GetMapping("/admin/syncTimeFromOldData/{id}")
+    public R syncDate(@RequestParam(value = "start", required = false) String start,
+                      @RequestParam(value = "end", required = false) String end,
+                      @PathVariable(value = "id",required = false) String id
+    ) {
+        return R.OK(userTimeService.transferOldTime(start, end,id));
     }
 
     @Operation(summary = "查询所有储存的学期")

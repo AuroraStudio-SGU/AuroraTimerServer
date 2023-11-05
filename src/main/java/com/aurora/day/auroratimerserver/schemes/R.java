@@ -28,14 +28,7 @@ public class R implements Serializable {
 
     public static R auto(boolean flag){
         if(flag) return R.OK(true);
-        else return R.error("系统错误");
-    }
-
-    public static R OK(JSONObject json) {
-        return new R(200, "操作成功", json);
-    }
-    public static R OK(JSONArray array) {
-        return new R(200, "操作成功", array);
+        else return new R(ResponseState.ERROR.getCode(), "系统错误",null);
     }
 
     public static R OK(Object object) {
@@ -46,18 +39,13 @@ public class R implements Serializable {
         return new R(200, "操作成功", null);
     }
 
-    public static R error(String msg) {
-        return new R(100, msg, null);
+    public static R error(ResponseState state){
+        return new R(state.getCode(),state.getMsg(),null);
     }
 
-    public static R error(ResponseState state, String msg){
-        return new R(state.getCode(),msg,null);
-    }
+    public static R error(ResponseState state,Object obj){return new R(state.getCode(),state.getMsg(),obj); }
 
-    public static R error(int code,String msg){return new R(code,msg,null); }
-    public static R error(String msg,Object obj){return new R(100,msg,obj); }
-
-    public static R error(String msg,Throwable e ,boolean isFullTrack){
+    public static R error(ResponseState state,Throwable e ,boolean isFullTrack){
         JSONObject error = new JSONObject();
         String error_msg = e.getLocalizedMessage();
         error.set("reason", error_msg==null?"大概率是空指针,总之没有消息":error_msg);
@@ -66,13 +54,16 @@ public class R implements Serializable {
         }else {
             error.set("stacks", Arrays.copyOfRange(e.getStackTrace(),0,10));
         }
-        return R.error(msg,error);
+        return R.error(state,error);
     }
 
-    public static R_MsgList errorList(List<String> errors){
-        return new R_MsgList(100,new JSONArray(errors));
+    public static R_MsgList errorList(ResponseState state,List<String> errors){
+        errors.add(state.getMsg());
+        return new R_MsgList(state,new JSONArray(errors));
     }
-    public static R_MsgList errorList(String ...errors){
-        return new R_MsgList(100,new JSONArray(errors));
+    public static R_MsgList errorList(ResponseState state,String ...errors){
+        JSONArray array = new JSONArray(errors);
+        array.add(state.getMsg());
+        return new R_MsgList(state,array);
     }
 }

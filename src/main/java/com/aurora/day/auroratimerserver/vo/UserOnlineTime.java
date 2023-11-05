@@ -14,4 +14,6 @@ public class UserOnlineTime {
     private long weekTime; //本周打开时长
     private long reduceTime; //减时情况
     private int unfinishedCount; //(未使用)未完成目标次数
+    private String avatar; //头像地址
+    private String grade; //年级
 }

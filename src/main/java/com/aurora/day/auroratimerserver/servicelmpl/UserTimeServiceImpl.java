@@ -7,10 +7,13 @@ import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.aurora.day.auroratimerserver.config.TimerConfig;
 import com.aurora.day.auroratimerserver.exceptions.TimeServicesException;
+import com.aurora.day.auroratimerserver.exceptions.UserServicesException;
 import com.aurora.day.auroratimerserver.mapper.OldUserTimeMapper;
 import com.aurora.day.auroratimerserver.mapper.TargetTimeMapper;
+import com.aurora.day.auroratimerserver.mapper.UserMapper;
 import com.aurora.day.auroratimerserver.mapper.UserTimeMapper;
 import com.aurora.day.auroratimerserver.pojo.*;
+import com.aurora.day.auroratimerserver.schemes.eums.ResponseState;
 import com.aurora.day.auroratimerserver.service.IUserTimeService;
 import com.aurora.day.auroratimerserver.utils.SchoolCalendarUtil;
 import com.aurora.day.auroratimerserver.vo.UserOnlineTime;
@@ -33,6 +36,7 @@ public class UserTimeServiceImpl implements IUserTimeService {
     private final UserTimeMapper userTimeMapper;
     private final TargetTimeMapper targetTimeMapper;
     private final OldUserTimeMapper oldUserTimeMapper;
+    private final UserMapper userMapper;
 
     @Override
     public long addTime(String id, int time) {
@@ -116,7 +120,7 @@ public class UserTimeServiceImpl implements IUserTimeService {
     }
 
     @Override
-    public boolean transferOldTime(String start, String end) {
+    public boolean transferOldTime(String start, String end,String id) {
         if (start == null || end == null) {
             TermTime termTime = SchoolCalendarUtil.getTermTime();
             if (termTime == null) {
@@ -128,8 +132,12 @@ public class UserTimeServiceImpl implements IUserTimeService {
         }
         boolean success = true;
         try {
+            //获取旧的打卡数据
             DynamicDataSourceContextHolder.push("oldtimer");
-            List<OldUserTime> list = oldUserTimeMapper.queryOldTimeByDate(start, end);
+            QueryWrapper<OldUserTime> wrapper = new QueryWrapper<>();
+            wrapper.eq(id!=null,"user_id",id);
+            wrapper.between("today_date",start,end);
+            List<OldUserTime> list = oldUserTimeMapper.selectList(wrapper);
             DynamicDataSourceContextHolder.poll();
             for (OldUserTime userTime : list) {
                 UserTime NewTime = new UserTime();
@@ -145,6 +153,13 @@ public class UserTimeServiceImpl implements IUserTimeService {
             success = false;
         }
         return success;
+    }
+
+    @Override
+    public List<UserTime> queryTime(String id, String start, String end) {
+        User user = userMapper.selectById(id);
+        if (user == null) throw new UserServicesException(ResponseState.IllegalArgument.replaceMsg("用户不存在"));
+        return userTimeMapper.queryTime(user.getId(),start,end);
     }
 
 }

@@ -10,7 +10,6 @@ import java.util.List;
 @Mapper
 public interface OldUserTimeMapper extends BaseMapper<OldUserTime> {
 
-
     @Select("select * from useronlinetime as t where today_date between #{start} and #{end} order by t.id")
     List<OldUserTime> queryOldTimeByDate(String start,String end);
 }

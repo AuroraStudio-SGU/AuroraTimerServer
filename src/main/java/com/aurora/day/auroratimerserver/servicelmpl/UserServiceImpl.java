@@ -6,6 +6,7 @@ import com.aurora.day.auroratimerserver.mapper.UserMapper;
 import com.aurora.day.auroratimerserver.mapper.UserTimeMapper;
 import com.aurora.day.auroratimerserver.pojo.User;
 import com.aurora.day.auroratimerserver.pojo.UserTime;
+import com.aurora.day.auroratimerserver.schemes.eums.ResponseState;
 import com.aurora.day.auroratimerserver.service.IUserService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
@@ -22,12 +23,11 @@ public class UserServiceImpl implements IUserService {
     private final UserTimeMapper userTimeMapper;
 
     @Override
-    public User registerUser(String id, String password, String name) {
-        User temp = userMapper.selectById(id);
-        if (temp != null) throw new UserServicesException("该学号已被注册");
-        User user = new User(id, name, password);
-        if (userMapper.insert(user) != 1) throw new UserServicesException("插入数据库失败");
-        return user;
+    public User registerUser(User newUser) {
+        User temp = userMapper.selectById(newUser.getId());
+        if (temp != null) throw new UserServicesException(ResponseState.IllegalArgument.replaceMsg("该学号已被注册"));
+        if (userMapper.insert(newUser) != 1) throw new UserServicesException(ResponseState.DateBaseError.replaceMsg("插入数据库失败"));
+        return newUser;
     }
 
     @Override
@@ -41,7 +41,7 @@ public class UserServiceImpl implements IUserService {
     @Override
     public boolean updateUser(User user) {
         User temp = userMapper.selectById(user.getId());
-        if (temp == null) throw new UserServicesException("用户不存在");
+        if (temp == null) throw new UserServicesException(ResponseState.IllegalArgument.replaceMsg("用户不存在"));
         user.setAdmin(temp.isAdmin()); //布尔值更新需要先获取原来的布尔值
         return userMapper.updateById(user) == 1;
     }
@@ -62,7 +62,7 @@ public class UserServiceImpl implements IUserService {
     @Override
     public boolean setUserReduceTimeById(String id, long time) {
         User user = userMapper.selectById(id);
-        if (user == null) throw new UserServicesException("用户不存在");
+        if (user == null) throw new UserServicesException(ResponseState.IllegalArgument.replaceMsg("用户不存在"));
         user.setReduceTime(time);
         return userMapper.updateById(user) == 1;
     }

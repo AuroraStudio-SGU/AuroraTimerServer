@@ -1,5 +1,6 @@
 package com.aurora.day.auroratimerserver.schemes.request;
 
+import com.aurora.day.auroratimerserver.pojo.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
@@ -20,4 +21,14 @@ public class RegisterRequest {
     @Length(min = 1,max = 32,message = "密码太长拉!")
     @Schema(name = "password",description = "密码")
     private String password;
+    @NotEmpty(message = "年级不能为空")
+    @Length(max = 3,message = "年级不应该有那么长把?")
+    @Schema(name = "grade",description = "年级(长度3位)",example = "21级")
+    private String grade;
+
+    public User toUser(){
+        User temp = new User(id, name, password);
+        temp.setGrade(grade);
+        return temp;
+    }
 }

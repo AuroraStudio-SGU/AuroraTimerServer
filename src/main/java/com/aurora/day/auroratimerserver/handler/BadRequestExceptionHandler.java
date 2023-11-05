@@ -31,26 +31,26 @@ public class BadRequestExceptionHandler {
                 errors.forEach(objectError -> {
                     errorMsgList.add(objectError.getDefaultMessage());
                 });
-                return R.errorList(errorMsgList);
+                return R.errorList(ResponseState.IllegalArgument,errorMsgList);
             }
         }
-        return R_MsgList.error("请求参数错误");
+        return R_MsgList.error(ResponseState.IllegalArgument.replaceMsg("请求参数错误"));
     }
 
     @ExceptionHandler(UserServicesException.class)
     public R UserServiceException(UserServicesException e){
-        return R.error("服务层出错",e,false);
+        return R.error(e.getState(),e,false);
     }
 
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public R RequestMethodException(HttpRequestMethodNotSupportedException e) {
-        return R.error("请求方式错误:" + e.getLocalizedMessage());
+        return R.error(ResponseState.IllegalArgument.replaceMsg("请求方式错误"),e,false);
     }
 
     @ExceptionHandler(Exception.class)
     public R GlobalException(Exception e) {
-        return R.error(ResponseState.ERROR.getMsg(), e,true);
+        return R.error(ResponseState.ERROR, e,true);
     }
 
 

@@ -9,12 +9,10 @@ public interface IUserService {
 
     /**
      * 注册用户
-     * @param id 学号
-     * @param password 密码
-     * @param name 姓名
+     * @param newUser 待创建的新用户
      * @return 若注册成功则返回注册后用户信息
      */
-    User registerUser(String id,String password,String name);
+    User registerUser(User newUser);
     /**
      * 用户登录
      * @param id 学号

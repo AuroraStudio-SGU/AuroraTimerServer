@@ -2,6 +2,7 @@ package com.aurora.day.auroratimerserver.service;
 
 
 import com.aurora.day.auroratimerserver.pojo.TargetTime;
+import com.aurora.day.auroratimerserver.pojo.UserTime;
 import com.aurora.day.auroratimerserver.vo.UserOnlineTime;
 
 import javax.validation.constraints.NotNull;
@@ -49,8 +50,17 @@ public interface IUserTimeService {
      * 将旧的数据迁移到新数据库当中
      * @param start 开始时间
      * @param end 结束时间
+     * @parm id 是否指定成员
      * @return 是否成功
      */
-    boolean transferOldTime(String start, String end);
+    boolean transferOldTime(String start, String end,String id);
 
+    /**
+     * 查询某人从start到end的打卡详情。(只算有计时的日子)
+     * @param id id
+     * @param start 开始日期
+     * @param end 结束日期
+     * @return list
+     */
+    List<UserTime> queryTime(String id,String start,String end);
 }

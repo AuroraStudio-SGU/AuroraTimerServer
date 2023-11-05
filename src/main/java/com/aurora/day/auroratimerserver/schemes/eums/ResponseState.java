@@ -10,7 +10,8 @@ public enum ResponseState {
     ERROR(2, 100, "后端崩咯"),
     IllegalArgument(3, 1000, "参数错了"),
     DateBaseError(4, 1001, "数据库崩了"),
-    AuthorizationError(5,403,"token验证失败或权限不足,尝试重新登录把");
+    AuthorizationError(5,403,"token验证失败或权限不足,尝试重新登录把"),
+    BlackListVersion(6,444,"此版本客户端有重大问题，请重新下载最新版");
     private final int index;
     private final int code;
     private String msg;
@@ -21,12 +22,12 @@ public enum ResponseState {
         this.msg = msg;
     }
 
-    public void setMsg(String value) {
-        this.msg = value;
-    }
-
-    public String appendGet(String appendMsg) {
+    public ResponseState appendMsg(String appendMsg) {
         this.msg = this.msg + ":" + appendMsg;
-        return this.msg;
+        return this;
+    }
+    public ResponseState replaceMsg(String msg){
+        this.msg = msg;
+        return this;
     }
 }
