@@ -19,10 +19,6 @@ import com.aurora.day.auroratimerservernative.service.INoticeService;
 import com.aurora.day.auroratimerservernative.service.ITermService;
 import com.aurora.day.auroratimerservernative.service.IUserTimeService;
 import com.aurora.day.auroratimerservernative.vo.UserOnlineTime;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +33,7 @@ import java.util.List;
 @RestControllerAdvice
 @Validated
 @RequiredArgsConstructor
-@Tag(name = "TimerController", description = "计时器接口")
+
 public class TimerController {
 
     private final Log logger = LogFactory.get(TimerController.class);
@@ -50,9 +46,7 @@ public class TimerController {
     //版本黑名单,有严重bug的版本提醒更换
     private static final List<String> BlackListVersion = Arrays.asList("0.0.8");
 
-    @Operation(summary = "添加计时", parameters = {
-            @Parameter(name = "id", description = "用户id", in = ParameterIn.PATH, required = true)
-    })
+
     //添加计时时长
     @GetMapping("/timer/addTime/{id}")
     public R addTime(@PathVariable(name = "id") String id,@RequestParam(value = "version",required = false)String version) {
@@ -69,9 +63,7 @@ public class TimerController {
         }
     }
 
-    @Operation(summary = "查询x周前的排行榜", parameters = {
-            @Parameter(name = "x", description = "前第x周", in = ParameterIn.PATH, required = true)
-    })
+
     //查询某周的打卡情况。
     @GetMapping("/timer/lastXWeek/{x}")
     public R lastXWeek(@PathVariable(name = "x") String x) {
@@ -81,7 +73,7 @@ public class TimerController {
 
     private final RankCache TopCache = new RankCache();
 
-    @Operation(summary = "返回上周打卡最多的三个人")
+
     //返回前一周打卡前三的。
     @GetMapping("/timer/top3")
     public R top3() {
@@ -94,7 +86,6 @@ public class TimerController {
 
     private final RankCache LastCache = new RankCache();
 
-    @Operation(summary = "返回不满足打卡需求的最后三位(算上减时的)")
     /*
         做了个小缓存，现在的逻辑是返回不满足打卡要求的最后三位，算上减时的
      */
@@ -118,20 +109,17 @@ public class TimerController {
         return R.OK(LastCache.getList());
     }
 
-    @Operation(summary = "测试是否存活")
     //心跳包
     @GetMapping("/ping")
     public R heartPackage() {
         return R.OK("pong");
     }
 
-    @Operation(summary = "获取最新的公告")
     @GetMapping("/timer/getNotice")
     public R getNotice() {
         return R.OK(noticeService.getCurrentNotice());
     }
 
-    @Operation(summary = "获取最新的值日表")
     @GetMapping("/getDustList")
     public R getDustList() {
         WeeklyDustList dust = dutyService.getNewestDust();
@@ -141,15 +129,12 @@ public class TimerController {
         return R.OK(dust);
     }
 
-    @Operation(summary = "获取最新的目标时长")
     @GetMapping("/getTargetTime")
     public R getTargetTime() {
         return R.OK(userTimeService.getTargetTime());
     }
 
-    @Operation(summary = "获取指定用户的本周时长", parameters = {
-            @Parameter(name = "id", description = "用户id", in = ParameterIn.PATH, required = true)
-    })
+
     @GetMapping("/timer/getWeekTime/{id}")
     public R getWeekTime(@PathVariable("id") String id) {
         Long time = userTimeService.getUserWeekTimeById(id);
@@ -157,9 +142,7 @@ public class TimerController {
         return R.OK(time);
     }
 
-    @Operation(summary = "获取你这个学期的打卡详情", parameters = {
-            @Parameter(name = "id", description = "用户id", in = ParameterIn.PATH, required = true)
-    })
+
     @GetMapping("/timer/queryTimeDetail/{id}")
     public R getUserTimeDetail(@PathVariable("id") String id) {
         Term term = termService.getCurrentTerm();

@@ -16,12 +16,6 @@ import com.aurora.day.auroratimerservernative.service.IUserService;
 import com.aurora.day.auroratimerservernative.service.IUserTimeService;
 import com.aurora.day.auroratimerservernative.utils.TokenUtil;
 import com.aurora.day.auroratimerservernative.vo.UserVo;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -35,25 +29,20 @@ import java.io.File;
 @RestControllerAdvice
 @Validated
 @RequiredArgsConstructor
-@Tag(name = "UserController", description = "用户接口")
 public class UserController {
 
     private static final Log logger = LogFactory.get();
 
     private final IUserService userService;
     private final IUserTimeService userTimeService;
-    @Operation(summary = "注册用户",requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "用户注册实体类",content = @Content(schema = @Schema(implementation = RegisterRequest.class))
-    ))
+
     @PostMapping("/user/register")
     public R register(@Valid @RequestBody RegisterRequest request) {
         User user = userService.registerUser(request.toUser());
         return R.OK(user.toVo());
     }
 
-    @Operation(summary = "登录",requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "用户登录实体类",content = @Content(schema = @Schema(implementation = LoginRequest.class))
-    ))
+
     @PostMapping("/user/login")
     public R login(@Valid @RequestBody LoginRequest request) {
         User user = userService.loginUser(request.getId(), request.getPassword());
@@ -66,9 +55,7 @@ public class UserController {
         return R.OK(vo);
     }
 
-    @Operation(summary = "更新用户",requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "用户实体类",content = @Content(schema = @Schema(implementation = updateUserRequest.class))
-    ))
+
     @PostMapping("/user/update")
     public R updateUser(@Valid @RequestBody updateUserRequest request) {
         User user = BeanUtil.toBean(request, User.class);
@@ -77,10 +64,7 @@ public class UserController {
         else return R.error(ResponseState.DateBaseError, ResponseState.DateBaseError.appendMsg("数据库更新失败"));
     }
 
-    @Operation(summary = "修改用户头像",parameters = {
-            @Parameter(name = "file",description = "formdata(blob)头像",required = true),
-            @Parameter(name = "id",description = "用户id",in= ParameterIn.PATH,required = true)
-    })
+
     @PostMapping("/user/uploadAvatar/{id}")
     public R avatar(@RequestParam("file") MultipartFile file, @PathVariable(name = "id") String id) {
         if (file == null) return R.error(ResponseState.IllegalArgument, "图片数据为空");
@@ -100,9 +84,7 @@ public class UserController {
         else return R.error(ResponseState.DateBaseError, ResponseState.DateBaseError.appendMsg("数据库更新失败"));
     }
 
-    @Operation(summary = "创建新Token",parameters = {
-            @Parameter(name = "id",description = "用户id",in=ParameterIn.PATH,required = true)
-    })
+
     @GetMapping("/user/newToken/{id}")
     public R generateToken(@PathVariable("id") String id) {
         User user = userService.queryUserById(id);
@@ -110,9 +92,7 @@ public class UserController {
         return R.OK(TokenUtil.createToken(user.getId(), user.isAdmin()));
     }
 
-    @Operation(summary = "根据token登录",parameters = {
-            @Parameter(name = "token",description = "token",in=ParameterIn.PATH,required = true)
-    })
+
     @GetMapping("/user/loginByToken/{token}")
     public R loginWithToken(@PathVariable("token") String token) {
         String uid = TokenUtil.getId(token);
@@ -129,10 +109,7 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "重置密码",parameters = {
-            @Parameter(name = "id",description = "用户id",in = ParameterIn.PATH,required = true),
-            @Parameter(name = "pwd",description = "新密码",in = ParameterIn.QUERY,required = true)
-    })
+
     @GetMapping("/user/resetPassword/{id}")
     public R resetPwd(@PathVariable("id") String id, @RequestParam("pwd") String pwd) {
         User user = userService.queryUserById(id);
@@ -141,9 +118,7 @@ public class UserController {
         userService.updateUser(user);
         return R.OK("重置成功，新密码为" + pwd);
     }
-    @Operation(summary = "获取用户头像",parameters = {
-            @Parameter(name = "id",description = "用户id",in=ParameterIn.PATH,required = true)
-    })
+
     @GetMapping("/user/avatar/{id}")
     public R getAvatar(@PathVariable("id") String id) {
         User user = userService.queryUserById(id);
@@ -151,15 +126,12 @@ public class UserController {
         if (user.getAvatar() == null) return R.OK(TimerConfig.avatarDefaultUrl);
         else return R.OK(user.getAvatar());
     }
-    @Operation(summary = "查询用户",parameters = {
-            @Parameter(name = "id",description = "用户id",in=ParameterIn.PATH,required = true)
-    })
+
     @GetMapping("/user/{id}")
     public R queryUser(@PathVariable("id") String id) {
         User user = userService.queryUserById(id);
         return R.OK(user.toVo());
     }
-    @Operation(summary = "获取默认头像")
     @GetMapping("/getDefaultAvatar")
     public R defaultAvatar() {
         return R.OK(TimerConfig.avatarDefaultUrl);

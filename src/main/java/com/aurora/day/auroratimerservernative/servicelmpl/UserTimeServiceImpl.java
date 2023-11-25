@@ -17,8 +17,6 @@ import com.aurora.day.auroratimerservernative.schemes.eums.ResponseState;
 import com.aurora.day.auroratimerservernative.service.IUserTimeService;
 import com.aurora.day.auroratimerservernative.utils.SchoolCalendarUtil;
 import com.aurora.day.auroratimerservernative.vo.UserOnlineTime;
-import com.baomidou.dynamic.datasource.annotation.DSTransactional;
-import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import lombok.RequiredArgsConstructor;
@@ -119,47 +117,9 @@ public class UserTimeServiceImpl implements IUserTimeService {
         String week_end = DateUtil.endOfWeek(now).toString(DatePattern.NORM_DATE_PATTERN);
         return userTimeMapper.queryUserWeekTime(id, week_start, week_end);
     }
-    @DSTransactional
     @Override
     public boolean transferOldTime(String start, String end,String id) {
-        if (start == null || end == null) {
-            TermTime termTime = SchoolCalendarUtil.getTermTime();
-            if (termTime == null) {
-                logger.error("学历获取失败");
-                return false;
-            }
-            start = DateUtil.format(termTime.getCurrentTerm().start, DatePattern.NORM_DATE_PATTERN);
-            end = DateUtil.format(termTime.getCurrentTerm().end, DatePattern.NORM_DATE_PATTERN);
-        }
-        boolean success = true;
-        try {
-            //获取旧的打卡数据
-            DynamicDataSourceContextHolder.push("oldtimer");
-            QueryWrapper<OldUserTime> wrapper = new QueryWrapper<>();
-            wrapper.eq(id!=null,"id",id);
-            wrapper.between("today_date",start,end);
-            List<OldUserTime> list = oldUserTimeMapper.selectList(wrapper);
-            DynamicDataSourceContextHolder.poll();
-            //删除它在新打卡器的数据
-            QueryWrapper<UserTime> newTimerWrapper = new QueryWrapper<>();
-            newTimerWrapper.eq(id!=null,"user_id",id);
-            newTimerWrapper.between("record_date",start,end);
-            int delete = userTimeMapper.delete(newTimerWrapper);
-            logger.info("尝试删除{}的数据,天数{}",id,delete);
-            for (OldUserTime userTime : list) {
-                UserTime NewTime = new UserTime();
-                NewTime.setUserId(userTime.getId());
-                NewTime.setRecordDate(userTime.getTodayDate());
-                NewTime.setLastRecordTime(new Date(userTime.getTodayDate().getTime()+userTime.getLastOnlineTime().getTime()));
-                NewTime.setOnlineTime(userTime.getTodayOnlineTime() / 1000L);
-                userTimeMapper.insert(NewTime);
-            }
-        } catch (Throwable t) {
-            logger.error("数据转移异常");
-            logger.error(t);
-            success = false;
-        }
-        return success;
+        return false;
     }
 
     @Override

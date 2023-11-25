@@ -53,6 +53,7 @@ public interface IUserTimeService {
      * @parm id 是否指定成员
      * @return 是否成功
      */
+    @Deprecated
     boolean transferOldTime(String start, String end,String id);
 
     /**

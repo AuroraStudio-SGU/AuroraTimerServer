@@ -3,7 +3,6 @@ package com.aurora.day.auroratimerservernative.schemes;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import com.aurora.day.auroratimerservernative.schemes.eums.ResponseState;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -11,13 +10,9 @@ import java.util.Arrays;
 import java.util.List;
 
 @Data
-@Schema(name = "R",description = "通用的返回对象")
 public class R implements Serializable {
-    @Schema(name = "code",description = "状态码",example = "200")
     int code;
-    @Schema(name = "msg",description = "消息",example = "操作成功")
     String msg;
-    @Schema(name = "data",description = "返回的JSON数据,若不需要,则为null")
     Object data;
 
     public R(int code, String msg, Object data) {
