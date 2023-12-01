@@ -4,9 +4,17 @@ import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Getter
 @ConfigurationProperties(prefix = "timer")
 public class TimerConfig {
+    /**
+     * 工作室各个方向的集合
+     */
+    public static final List<String> workGroupList = Arrays.asList("Web前端","Web后端","算法","设计","嵌入式","人工智能","数据分析","网络安全");
+
     /***
      * 补时间隔时间，单位 秒(s)<br>
      * 默认值:900

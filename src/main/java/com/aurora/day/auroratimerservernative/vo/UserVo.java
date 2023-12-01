@@ -20,4 +20,5 @@ public class UserVo {
     private String grade;//年级
     @Alias("workGroup")
     private String work_group;//方向
+    private int priv;//权限，详细请查看PrivilegeEnum
 }

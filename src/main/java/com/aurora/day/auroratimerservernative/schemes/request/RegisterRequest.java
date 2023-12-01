@@ -20,12 +20,15 @@ public class RegisterRequest {
     @Length(min = 1,max = 32,message = "密码太长拉!")
     private String password;
     @NotEmpty(message = "年级不能为空")
-    @Length(max = 3,message = "年级不应该有那么长把?")
+    @Length(max = 2,message = "年级不应该有那么长把?")
     private String grade;
+    @NotEmpty(message = "方向不能为空")
+    private String workGroup;
 
     public User toUser(){
         User temp = new User(id, name, SecureUtil.md5(password));
         temp.setGrade(grade);
+        temp.setWorkGroup(workGroup);
         return temp;
     }
 }

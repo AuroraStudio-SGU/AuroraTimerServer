@@ -38,7 +38,9 @@ public class R implements Serializable {
         return new R(state.getCode(),state.getMsg(),null);
     }
 
-    public static R error(ResponseState state,Object obj){return new R(state.getCode(),state.getMsg(),obj); }
+    public static R error(ResponseState state,String msg){return new R(state.getCode(),msg,null); }
+
+    public static R error(ResponseState state,JSONObject object){return new R(state.getCode(),state.getMsg(),object);}
 
     public static R error(ResponseState state,Throwable e ,boolean isFullTrack){
         JSONObject error = new JSONObject();

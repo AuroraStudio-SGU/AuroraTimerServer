@@ -16,4 +16,6 @@ public class UserOnlineTime {
     private int unfinishedCount; //(未使用)未完成目标次数
     private String avatar; //头像地址
     private String grade; //年级
+    private String workGroup;//方向
+    private int priv;//权限枚举值,具体正在PrivilegeEnum当中。
 }

@@ -26,6 +26,7 @@ public class User {
     private String major;
     private String grade;
     private String workGroup;
+    private int priv;
 
     public UserVo toVo() {
         return BeanUtil.toBean(this, UserVo.class);
@@ -43,6 +44,7 @@ public class User {
         this.major = "待填写";
         this.grade = "待填写";
         this.workGroup = "待填写";
+        this.priv = 0;
     }
 
 }

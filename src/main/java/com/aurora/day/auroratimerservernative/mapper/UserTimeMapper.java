@@ -13,7 +13,7 @@ import java.util.List;
 public interface UserTimeMapper extends BaseMapper<UserTime> {
     //TODO这里的sum计算未来还是使用cache的方式进行。
     //↑cache不了一点，基本上都要频繁刷新的
-    @Select("select u.id as 'id' , u.name as 'name' , u.reduce_time as 'reduceTime', u.unfinished_count as 'unfinishedCount', u.grade as 'grade',u.avatar as 'avatar' , " +
+    @Select("select u.id as 'id' , u.name as 'name' , u.reduce_time as 'reduceTime', u.unfinished_count as 'unfinishedCount', u.grade as 'grade',u.avatar as 'avatar', u.priv as 'priv', u.work_group as 'workGroup' , " +
             "COALESCE(w.weekTime,0) as 'weekTime' ," +
             "COALESCE(y.totalTime,0) as 'totalTime'" +
             "from user as u " +

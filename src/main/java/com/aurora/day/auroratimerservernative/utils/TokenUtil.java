@@ -3,7 +3,9 @@ package com.aurora.day.auroratimerservernative.utils;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.jwt.JWTUtil;
 import com.aurora.day.auroratimerservernative.config.TimerConfig;
+import com.aurora.day.auroratimerservernative.schemes.eums.PrivilegeEnum;
 import jakarta.servlet.http.HttpServletRequest;
+import org.noear.snack.ONode;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,27 +14,14 @@ import java.util.Map;
  * Token工具类
  */
 public class TokenUtil {
-
-    public static String createToken(String uid, long expire_time, boolean isAdmin) {
-        Map<String, Object> map = new HashMap<String, Object>() {
-            private static final long serialVersionUID = 1L;
-
-            {
-                put("isAdmin", isAdmin);
-                put("id", uid);
-                put("expire_time", System.currentTimeMillis() + expire_time);
-            }
-        };
-        return JWTUtil.createToken(map, TimerConfig.getTokenKeyByte());
-    }
-
-    public static String createToken(String uid, boolean isAdmin) {
-        Map<String, Object> map = new HashMap<String, Object>() {
+    public static String createToken(String uid, boolean isAdmin, PrivilegeEnum privilegeEnum) {
+        Map<String, Object> map = new HashMap<>() {
             private static final long serialVersionUID = 1L;
 
             {
                 put("isAdmin", isAdmin);
                 put("user_id", uid);
+                put("priv", privilegeEnum.toJSON());
                 put("expire_time", System.currentTimeMillis() + TimerConfig.tokenExpireTime);
             }
         };
@@ -64,6 +53,11 @@ public class TokenUtil {
         }else {
             return null;
         }
+    }
+    public static PrivilegeEnum getPriv(String token){
+        if(token==null || token.isEmpty()) return null;
+        if(!Verify(token)) return null;
+        return PrivilegeEnum.parseJSON(JWTUtil.parseToken(token).getPayloads().getStr("priv",""));
     }
 
 }
