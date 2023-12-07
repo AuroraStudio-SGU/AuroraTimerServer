@@ -24,4 +24,9 @@ public interface ITermService {
      */
     List<Term> getAllTerms();
 
+    /***
+     * 新增学期
+     */
+    boolean insertTerm(Term term);
+
 }

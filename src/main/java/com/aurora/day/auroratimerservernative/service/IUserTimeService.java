@@ -3,7 +3,7 @@ package com.aurora.day.auroratimerservernative.service;
 
 import com.aurora.day.auroratimerservernative.pojo.TargetTime;
 import com.aurora.day.auroratimerservernative.pojo.UserTime;
-import com.aurora.day.auroratimerservernative.vo.UserOnlineTime;
+import com.aurora.day.auroratimerservernative.pojo.UserOnlineTime;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;

@@ -9,6 +9,6 @@ public class updateUserRequest {
     private String avatar;
     private String major;
     private String grade;
-    private String work_group;
+    private String workGroup;
     private boolean afk;
 }

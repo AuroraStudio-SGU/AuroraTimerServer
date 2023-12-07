@@ -1,6 +1,5 @@
 package com.aurora.day.auroratimerservernative.controller;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.log.Log;
@@ -16,8 +15,9 @@ import com.aurora.day.auroratimerservernative.schemes.request.RegisterRequest;
 import com.aurora.day.auroratimerservernative.schemes.request.updateUserRequest;
 import com.aurora.day.auroratimerservernative.service.IUserService;
 import com.aurora.day.auroratimerservernative.service.IUserTimeService;
+import com.aurora.day.auroratimerservernative.utils.ConvertMapper;
 import com.aurora.day.auroratimerservernative.utils.TokenUtil;
-import com.aurora.day.auroratimerservernative.vo.UserVo;
+import com.aurora.day.auroratimerservernative.pojo.UserVo;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -39,31 +39,35 @@ public class UserController {
     private final IUserService userService;
     private final IUserTimeService userTimeService;
     private final UserMapper userMapper;
+    private final ConvertMapper conventHelper;
 
     @PostMapping("/user/register")
     public R register(@Valid @RequestBody RegisterRequest request) {
-        User user = userService.registerUser(request.toUser());
-        return R.OK(user.toVo());
+        User user = userService.registerUser(conventHelper.toUser(request));
+        return R.OK(conventHelper.toVo(user));
     }
 
 
     @PostMapping("/user/login")
-    public R login(@Valid @RequestBody LoginRequest request, HttpServletRequest servletRequest) {
+    public R login(@Valid @RequestBody LoginRequest request) {
         User user = userService.loginUser(request.getId(), request.getPassword());
         if (user == null) return R.error(ResponseState.IllegalArgument.replaceMsg("账号或密码错误"));
-        UserVo vo = BeanUtil.toBean(user, UserVo.class);
+        UserVo vo = conventHelper.toVo(user);
         Long time = userTimeService.getUserWeekTimeById(vo.getId());
         if (time == null) time = 0L;
         vo.setCurrentWeekTime(time);
-        vo.setToken(TokenUtil.createToken(user.getId(), user.isAdmin(),PrivilegeEnum.conventToEnum(user.getPriv())));
+        PrivilegeEnum priv = PrivilegeEnum.conventToEnum(user.getPriv());
+        if (priv == null) {
+            logger.warn("成员{}的权限获取失败", user.getId());
+            priv = PrivilegeEnum.Normal;
+        }
+        vo.setToken(TokenUtil.createToken(user.getId(), user.isAdmin(), priv));
         return R.OK(vo);
     }
 
-
     @PostMapping("/user/update")
     public R updateUser(@Valid @RequestBody updateUserRequest request) {
-        User user = BeanUtil.toBean(request, User.class);
-        user.setWorkGroup(request.getWork_group());
+        User user = conventHelper.toUser(request);
         if (userService.updateUser(user)) return R.OK();
         else return R.error(ResponseState.DateBaseError, "数据库更新失败");
     }
@@ -72,7 +76,7 @@ public class UserController {
     @PostMapping("/user/uploadAvatar/{id}")
     public R avatar(@RequestParam("file") MultipartFile file, @PathVariable(name = "id") String id) {
         User user = userService.queryUserById(id);
-        if(user==null) return R.error(ResponseState.IllegalArgument,"用户不存在");
+        if (user == null) return R.error(ResponseState.IllegalArgument, "用户不存在");
         if (file == null) return R.error(ResponseState.IllegalArgument, "图片数据为空");
         String fileName = "Avatar-" + id + ".png";
         String avatarPath = File.separator + "avatars" + File.separator + fileName;
@@ -86,30 +90,30 @@ public class UserController {
         }
         String linkUrl = "http://" + TimerConfig.publicHost + avatarPath.replaceAll("\\\\", "/");
         user.setAvatar(linkUrl);
-        if (userMapper.updateById(user)==1)
+        if (userMapper.updateById(user) == 1)
             return R.OK(linkUrl);
         else return R.error(ResponseState.DateBaseError, "数据库更新失败");
     }
 
 
     @GetMapping("/user/newToken/{id}")
-    public R generateToken(@PathVariable("id") String id,HttpServletRequest servletRequest) {
+    public R generateToken(@PathVariable("id") String id, HttpServletRequest servletRequest) {
         User user = userService.queryUserById(id);
         if (user == null) return R.error(ResponseState.IllegalArgument, "用户不存在");
-        return R.OK(TokenUtil.createToken(user.getId(), user.isAdmin(),PrivilegeEnum.conventToEnum(user.getPriv())));
+        return R.OK(TokenUtil.createToken(user.getId(), user.isAdmin(), PrivilegeEnum.conventToEnum(user.getPriv())));
     }
 
 
     @GetMapping("/user/loginByToken/{token}")
-    public R loginWithToken(@PathVariable("token") String token,HttpServletRequest servletRequest) {
+    public R loginWithToken(@PathVariable("token") String token, HttpServletRequest servletRequest) {
         String uid = TokenUtil.getId(token);
         if (uid != null) {
             User user = userService.queryUserById(uid);
             Long time = userTimeService.getUserWeekTimeById(uid);
             if (time == null) time = 0L;
-            UserVo vo = BeanUtil.toBean(user, UserVo.class);
+            UserVo vo = conventHelper.toVo(user);
             vo.setCurrentWeekTime(time);
-            vo.setToken(TokenUtil.createToken(user.getId(), user.isAdmin(),PrivilegeEnum.conventToEnum(user.getPriv())));
+            vo.setToken(TokenUtil.createToken(user.getId(), user.isAdmin(), PrivilegeEnum.conventToEnum(user.getPriv())));
             return R.OK(vo);
         } else {
             return R.error(ResponseState.AuthorizationError, "token不正确或token已过期");
@@ -122,7 +126,7 @@ public class UserController {
         User user = userService.queryUserById(id);
         if (user == null) return R.error(ResponseState.IllegalArgument, "用户不存在");
         user.setPassword(SecureUtil.md5(pwd));
-        if(userMapper.updateById(user)!=1) return R.error(ResponseState.DateBaseError,"数据库更新失败");
+        if (userMapper.updateById(user) != 1) return R.error(ResponseState.DateBaseError, "数据库更新失败");
         return R.OK("重置成功，新密码为" + pwd);
     }
 
@@ -137,26 +141,33 @@ public class UserController {
     @GetMapping("/user/{id}")
     public R queryUser(@PathVariable("id") String id) {
         User user = userService.queryUserById(id);
-        return R.OK(user.toVo());
+        return R.OK(conventHelper.toVo(user));
     }
+
     @GetMapping("/getDefaultAvatar")
     public R defaultAvatar() {
         return R.OK(TimerConfig.avatarDefaultUrl);
     }
 
     @GetMapping("/getWorkGroupList")
-    public R getWorkGroupList(){
+    public R getWorkGroupList() {
         return R.OK(TimerConfig.workGroupList);
     }
 
     @GetMapping("/user/getPriv")
-    public R checkPriv(HttpServletRequest request){
+    public R checkPriv(HttpServletRequest request) {
         PrivilegeEnum priv = TokenUtil.getPriv(request.getHeader("token"));
         return R.OK(priv.toJSON());
     }
-
     @GetMapping("/user/getPrivList")
-    public R getPrivList(){
+    public R getPrivList() {
         return R.OK(PrivilegeEnum.PrivList);
+    }
+
+    @GetMapping("/manager/deleteUser/{id}")
+    public R deleteUser(@PathVariable("id") String id) {
+        User user = userService.queryUserById(id);
+        if (user == null) return R.error(ResponseState.IllegalArgument, "用户不存在");
+        return R.auto(userService.deleteUser(user));
     }
 }

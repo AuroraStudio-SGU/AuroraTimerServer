@@ -1,28 +1,38 @@
 package com.aurora.day.auroratimerservernative.controller;
 
+import cn.hutool.cache.CacheUtil;
+import cn.hutool.cache.impl.TimedCache;
 import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.aurora.day.auroratimerservernative.cache.RankCache;
+import com.aurora.day.auroratimerservernative.config.TimerConfig;
 import com.aurora.day.auroratimerservernative.exceptions.TimeServicesException;
 import com.aurora.day.auroratimerservernative.pojo.Term;
 import com.aurora.day.auroratimerservernative.pojo.UserTime;
 import com.aurora.day.auroratimerservernative.pojo.WeeklyDustList;
 import com.aurora.day.auroratimerservernative.schemes.R;
 import com.aurora.day.auroratimerservernative.schemes.eums.ResponseState;
+import com.aurora.day.auroratimerservernative.schemes.response.ImageData;
+import com.aurora.day.auroratimerservernative.schemes.response.UploadImageResponse;
 import com.aurora.day.auroratimerservernative.schemes.response.UserTimeDetailResponse;
 import com.aurora.day.auroratimerservernative.service.IDutyService;
 import com.aurora.day.auroratimerservernative.service.INoticeService;
 import com.aurora.day.auroratimerservernative.service.ITermService;
 import com.aurora.day.auroratimerservernative.service.IUserTimeService;
-import com.aurora.day.auroratimerservernative.vo.UserOnlineTime;
+import com.aurora.day.auroratimerservernative.pojo.UserOnlineTime;
 import lombok.RequiredArgsConstructor;
+import org.noear.snack.ONode;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -62,18 +72,23 @@ public class TimerController {
             return R.error(ResponseState.ERROR, "添加计时失败");
         }
     }
-
+    //排行榜缓存
+    private static final TimedCache<String, List<UserOnlineTime>> RankCache = CacheUtil.newTimedCache(DateUnit.MINUTE.getMillis());
 
     //查询某周的打卡情况。
     @GetMapping("/timer/lastXWeek/{x}")
     public R lastXWeek(@PathVariable(name = "x") String x) {
         if (!StrUtil.isNumeric(x)) return R.error(ResponseState.IllegalArgument, "非法参数!");
-        return R.OK(userTimeService.getTimeRank(Integer.parseInt(x)));
+        List<UserOnlineTime> cache = RankCache.get(x, false);
+        if(cache==null){
+            cache = userTimeService.getTimeRank(Integer.parseInt(x));
+            RankCache.put(x,cache);
+        }
+        return R.OK(cache);
     }
 
+
     private final RankCache TopCache = new RankCache();
-
-
     //返回前一周打卡前三的。
     @GetMapping("/timer/top3")
     public R top3() {
@@ -160,6 +175,30 @@ public class TimerController {
         res.setDates(dateList);
         res.setTimes(timeList);
         return R.OK(res);
+    }
+
+    @RequestMapping(method = {RequestMethod.POST,RequestMethod.GET},value = "/uploadImage")
+    public UploadImageResponse uploadImage(@RequestPart("file")MultipartFile file){
+        UploadImageResponse response = new UploadImageResponse();
+        try{
+            File folder = new File(TimerConfig.filePath,"resources");//专门放杂七杂八的图片
+            if(!folder.exists()){
+                if(folder.isDirectory() && folder.mkdirs()){
+                    throw new RuntimeException("Create folder fail");
+                }
+            }
+            String fileName = System.currentTimeMillis() + "-" + file.getOriginalFilename();
+            File imageFile = FileUtil.file(folder,fileName);
+            FileUtil.writeBytes(file.getBytes(),imageFile);
+            String linkUrl = "http://" + TimerConfig.publicHost + "/" + "resources/" + fileName;
+            response.setData(new ImageData(linkUrl,file.getOriginalFilename()));
+            return response;
+        }catch (Throwable t){
+            logger.warn("上传文件失败:",t);
+            response.setErrno(1);
+            response.setMessage(t.getCause().getLocalizedMessage()==null?"空指针异常":t.getCause().getLocalizedMessage());
+            return response;
+        }
     }
 
 }

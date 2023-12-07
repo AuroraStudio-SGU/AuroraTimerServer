@@ -8,19 +8,19 @@ import cn.hutool.log.LogFactory;
 import com.aurora.day.auroratimerservernative.config.TimerConfig;
 import com.aurora.day.auroratimerservernative.exceptions.TimeServicesException;
 import com.aurora.day.auroratimerservernative.exceptions.UserServicesException;
-import com.aurora.day.auroratimerservernative.mapper.OldUserTimeMapper;
+
 import com.aurora.day.auroratimerservernative.mapper.TargetTimeMapper;
 import com.aurora.day.auroratimerservernative.mapper.UserMapper;
 import com.aurora.day.auroratimerservernative.mapper.UserTimeMapper;
 import com.aurora.day.auroratimerservernative.pojo.*;
 import com.aurora.day.auroratimerservernative.schemes.eums.ResponseState;
+import com.aurora.day.auroratimerservernative.service.ITermService;
 import com.aurora.day.auroratimerservernative.service.IUserTimeService;
 import com.aurora.day.auroratimerservernative.utils.SchoolCalendarUtil;
-import com.aurora.day.auroratimerservernative.vo.UserOnlineTime;
+import com.aurora.day.auroratimerservernative.pojo.UserOnlineTime;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -34,8 +34,8 @@ public class UserTimeServiceImpl implements IUserTimeService {
 
     private final UserTimeMapper userTimeMapper;
     private final TargetTimeMapper targetTimeMapper;
-    private final OldUserTimeMapper oldUserTimeMapper;
     private final UserMapper userMapper;
+    private final ITermService termService;
 
     @Override
     public long addTime(String id, int time) {
@@ -54,7 +54,7 @@ public class UserTimeServiceImpl implements IUserTimeService {
         if (userTime == null) {
             userTime = new UserTime(id, today, todayTime, time);
             if (userTimeMapper.insert(userTime) != 1) throw new TimeServicesException("计时失败");
-            logger.info("用户:" + id + " 今日首次打卡:" + resultTime + "秒");
+            logger.info("用户:" + id + " 今日首次打卡,本周时长:" + resultTime + "秒");
             return resultTime;
         } else {
             UpdateWrapper<UserTime> updateWrapper = new UpdateWrapper<>();
@@ -76,7 +76,7 @@ public class UserTimeServiceImpl implements IUserTimeService {
                 userTime.setOnlineTime(resultTime);
             }
             updateWrapper.set("online_time", resultTime);
-            logger.info("用户:" + id + " 添加计时时长:" + resultTime + "秒");
+            logger.info("用户:" + id + " 打卡成功,本周时长:" + resultTime + "秒");
             if (userTimeMapper.update(userTime, updateWrapper) != 1) throw new TimeServicesException("计时失败");
             return resultTime;
         }
@@ -87,11 +87,27 @@ public class UserTimeServiceImpl implements IUserTimeService {
         //先获取第x周的日期范围
         String weekStart = DateUtil.format(CalendarUtil.beginOfWeek(DateUtil.offsetWeek(DateUtil.date(), -x).toCalendar()).getTime(), DatePattern.NORM_DATE_PATTERN);
         String weekEnd = DateUtil.format(CalendarUtil.endOfWeek(DateUtil.offsetWeek(DateUtil.date(), -x).toCalendar()).getTime(), DatePattern.NORM_DATE_PATTERN);
-        //TODO 校历功能完善后改掉写死日期的方式
         //获取当前学期的日期范围
-        TermTime termTime = SchoolCalendarUtil.getTermTimeLocal();
-        Term currentTerm = termTime.getCurrentTerm();
-        //TODO if Term is null
+        Term currentTerm = termService.getCurrentTerm();
+        if(currentTerm==null){
+            //尝试从校历获取
+            TermTime termTime = SchoolCalendarUtil.getTermTimeLocal();
+            if(termTime==null){
+                try{
+                    termTime = SchoolCalendarUtil.getTermTime();
+                }catch (Throwable t){
+                    logger.warn("线上获取校历失败:{}",t);
+                }
+            }
+            if(termTime!=null){
+                currentTerm = termTime.getCurrentTerm();
+            }
+            if(currentTerm==null){
+                //make fake term for temple use
+                currentTerm = Term.makeTempleTerm();
+            }
+            termService.insertTerm(currentTerm);
+        }
         String TermStart = DateUtil.format(currentTerm.start, DatePattern.NORM_DATE_PATTERN);
         String TermEnd = DateUtil.format(currentTerm.end, DatePattern.NORM_DATE_PATTERN);
         return userTimeMapper.getRankTime(TermStart, TermEnd, weekStart, weekEnd);
@@ -109,7 +125,6 @@ public class UserTimeServiceImpl implements IUserTimeService {
         return targetTimeMapper.insert(new TargetTime(targetTime)) == 1;
     }
 
-    @Nullable
     @Override
     public Long getUserWeekTimeById(String id) {
         Date now = new Date();
@@ -117,6 +132,7 @@ public class UserTimeServiceImpl implements IUserTimeService {
         String week_end = DateUtil.endOfWeek(now).toString(DatePattern.NORM_DATE_PATTERN);
         return userTimeMapper.queryUserWeekTime(id, week_start, week_end);
     }
+    @Deprecated
     @Override
     public boolean transferOldTime(String start, String end,String id) {
         return false;

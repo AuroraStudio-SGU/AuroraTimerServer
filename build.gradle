@@ -5,8 +5,9 @@ plugins {
     id 'org.graalvm.buildtools.native' version '0.9.28'
 }
 
+
 group = 'com.aurora.day'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.1'
 
 java {
     sourceCompatibility = '17'
@@ -31,6 +32,8 @@ dependencies {
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     annotationProcessor 'org.projectlombok:lombok'
+    compileOnly 'org.mapstruct:mapstruct:1.6.0.Beta1'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.0.Beta1'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     implementation ('com.baomidou:mybatis-plus-boot-starter:3.5.4.1') {
         exclude group: 'org.mybatis',module: 'mybatis-spring:2.1.1'
@@ -39,6 +42,7 @@ dependencies {
     implementation 'org.noear:snack3:3.2.82'
     implementation 'cn.hutool:hutool-all:5.8.23'
     implementation 'org.apache.poi:poi-ooxml:5.2.3'//用于读取学校校历
+
 }
 
 tasks.named('bootBuildImage') {
@@ -48,3 +52,17 @@ tasks.named('bootBuildImage') {
 tasks.named('test') {
     useJUnitPlatform()
 }
+graalvmNative {
+    agent {
+        defaultMode = "standard"
+    }
+    binaries {
+        main {
+            buildArgs.add('-H:+AddAllCharsets')
+        }
+    }
+    metadataRepository {
+        enabled = true
+    }
+}
+

@@ -3,6 +3,7 @@ package com.aurora.day.auroratimerservernative.schemes;
 import com.aurora.day.auroratimerservernative.schemes.eums.ResponseState;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +11,7 @@ import java.util.List;
  * 用来承载多个错误参数的情况
  */
 @Data
-public class R_MsgList {
+public class R_MsgList implements Serializable {
     int code;
     Object msgList;
 

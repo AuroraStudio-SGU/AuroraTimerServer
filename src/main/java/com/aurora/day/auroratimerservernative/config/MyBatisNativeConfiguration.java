@@ -1,5 +1,8 @@
 package com.aurora.day.auroratimerservernative.config;
 
+import com.aurora.day.auroratimerservernative.pojo.UserOnlineTime;
+import com.aurora.day.auroratimerservernative.pojo.UserVo;
+import com.aurora.day.auroratimerservernative.schemes.R;
 import com.baomidou.mybatisplus.annotation.IEnum;
 import com.baomidou.mybatisplus.core.MybatisParameterHandler;
 import com.baomidou.mybatisplus.core.MybatisXMLLanguageDriver;
@@ -46,6 +49,7 @@ import org.apache.ibatis.reflection.TypeParameterResolver;
 import org.apache.ibatis.scripting.defaults.RawLanguageDriver;
 import org.apache.ibatis.scripting.xmltags.XMLLanguageDriver;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.mybatis.spring.mapper.MapperScannerConfigurer;
@@ -168,6 +172,7 @@ public class MyBatisNativeConfiguration {
       hints.reflection().registerType(GsonTypeHandler.class, MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS);
       hints.reflection().registerType(JacksonTypeHandler.class, MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS);
       hints.reflection().registerType(MybatisEnumTypeHandler.class, MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS);
+
     }
   }
 

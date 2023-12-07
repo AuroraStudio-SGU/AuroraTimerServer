@@ -1,0 +1,28 @@
+server:
+  port: 8084
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/timer2?useSSL=true&useUnicode=true&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8
+    username: root
+    password: kel123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-request-size: 200MB
+      max-file-size: 10MB
+  jackson:
+    time-zone: GMT+8
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+timer:
+  interval-time: 900
+  avatar-default-url: http://192.168.49.66:8000/avatars/DefaultAvtart.png
+  token-expire-time: 259200000
+  token-key: AuroraTimer
+  filePath: D:\\project\\Timer_ServerFile
+  public-host: localhost:9999/files
+  id-length: 16
+  notice-size: 10
+  duty-size: 10
+  term-size: 10

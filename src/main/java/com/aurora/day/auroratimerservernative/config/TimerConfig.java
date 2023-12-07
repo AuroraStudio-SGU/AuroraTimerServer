@@ -33,10 +33,16 @@ public class TimerConfig {
      */
     public static int noticeSize;
     /***
-     * 值日表存放个数,超过该数则开始删除旧的值日<br>
+     * 值日表存放个数,超过该数则开始删除旧的值日表<br>
      * 默认值:10
      */
     public static int DutySize;
+
+    /***
+     * 学期表存放个数,超过该数则开始删除旧的<br>
+     * 默认值:10
+     */
+    public static int TermSize;
 
     /***
      * 默认头像地址<br>
@@ -110,6 +116,8 @@ public class TimerConfig {
     public void setDutySize(int dutySize) {
         DutySize = dutySize;
     }
+    @Value("${timer.term-size:10}")
+    public void setTermSize(int termSize) {TermSize = termSize;}
 
     public static byte[] getTokenKeyByte(){
         return TimerConfig.tokenKey.getBytes();

@@ -42,13 +42,12 @@ public class BadRequestExceptionHandler {
         return R.error(e.getState(),e,false);
     }
 
-
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public R RequestMethodException(HttpRequestMethodNotSupportedException e) {
         return R.error(ResponseState.IllegalArgument.replaceMsg("请求方式错误"),e,false);
     }
 
-    @ExceptionHandler(Exception.class)
+//    @ExceptionHandler(Exception.class)
     public R GlobalException(Exception e) {
         return R.error(ResponseState.ERROR, e,true);
     }

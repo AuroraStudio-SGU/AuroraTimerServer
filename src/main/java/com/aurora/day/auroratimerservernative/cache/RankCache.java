@@ -1,7 +1,7 @@
 package com.aurora.day.auroratimerservernative.cache;
 
 import cn.hutool.core.date.DateUtil;
-import com.aurora.day.auroratimerservernative.vo.UserOnlineTime;
+import com.aurora.day.auroratimerservernative.pojo.UserOnlineTime;
 import lombok.Data;
 
 import java.util.Date;

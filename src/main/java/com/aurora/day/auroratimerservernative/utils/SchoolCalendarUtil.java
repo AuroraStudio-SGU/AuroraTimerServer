@@ -15,7 +15,9 @@ import com.aurora.day.auroratimerservernative.config.TimerConfig;
 import com.aurora.day.auroratimerservernative.pojo.Term;
 import com.aurora.day.auroratimerservernative.pojo.TermTime;
 
+
 import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -40,10 +42,8 @@ public class SchoolCalendarUtil {
         try(HttpResponse response = CaleListPageRequest.execute()) {
             CaleListPage = response.body();
         }
-        //TODO if null
         if(CaleListPage==null) return null;
         String calePageUrl = findCalePageUrl(CaleListPage,CalendarYear);
-        //TODO if null
         String schoolCaleMatchingUrl = "http://www.sgu.edu.cn/"+calePageUrl;
         HttpRequest CalePageRequest = HttpUtil.createGet(schoolCaleMatchingUrl);
         CalePageRequest.header("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36");
@@ -51,11 +51,9 @@ public class SchoolCalendarUtil {
         try(HttpResponse response =  CalePageRequest.execute()){
            calePage  = response.body();
         }
-        //TODO if null
         if(calePage==null) return null;
         File caleFile = downloadCale(calePage,CalendarYear);
         if(caleFile==null) {
-            //TODO if null
             return null;
         }
         ExcelReader reader = ExcelUtil.getReader(caleFile);
@@ -93,7 +91,9 @@ public class SchoolCalendarUtil {
         return matcherResult;
     }
 
+
     private static TermTime toTerm(List<Object> titles){
+        if(titles==null) return null;
         String rex = "周历说明:([^\\d]+)(\\d+)天，从(\\d+月\\d+日)至(\\d+月\\d+日)";
         TermTime termTime = new TermTime();
         Map<String, Term> termList = new HashMap<>(2);
@@ -131,10 +131,18 @@ public class SchoolCalendarUtil {
     public static TermTime getTermTimeLocal(){
         int year = DateUtil.thisYear();
         String CalendarYear = year-1+"-"+year;
-        File caleFile = FileUtil.file(TimerConfig.filePath + "\\Calendar"+CalendarYear+".xls");
-        ExcelReader reader = ExcelUtil.getReader(caleFile);
-        List<List<Object>> readAll = reader.read();
-        List<Object> titles = readAll.stream().filter(list -> ((String) list.get(0)).contains("周历说明")).map(list -> list.get(0)).collect(Collectors.toList());
+        List<Object> titles = null;
+        try{
+            File caleFile = FileUtil.file(TimerConfig.filePath + "\\Calendar"+CalendarYear+".xls");
+            List<List<Object>> readAll = ExcelUtils.readAll(caleFile);
+            titles = readAll.stream().filter(list -> ((String) list.get(0)).contains("周历说明")).map(list -> list.get(0)).collect(Collectors.toList());
+        }catch (Exception e){
+            if(e instanceof IOException){
+                logger.warn("日历文件读取失败");
+                return null;
+            }
+            logger.warn("POI出错:{}",e);
+        }
         return toTerm(titles);
     }
 }

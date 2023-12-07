@@ -1,5 +1,6 @@
 package com.aurora.day.auroratimerservernative.controller;
 
+import com.aurora.day.auroratimerservernative.pojo.Term;
 import com.aurora.day.auroratimerservernative.pojo.User;
 import com.aurora.day.auroratimerservernative.schemes.R;
 import com.aurora.day.auroratimerservernative.schemes.eums.ResponseState;
@@ -8,6 +9,7 @@ import com.aurora.day.auroratimerservernative.schemes.request.setDutyRequest;
 import com.aurora.day.auroratimerservernative.schemes.request.updateTermRequest;
 import com.aurora.day.auroratimerservernative.service.*;
 import lombok.RequiredArgsConstructor;
+import org.noear.snack.ONode;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -79,21 +81,19 @@ public class AdminController {
     }
 
 
-    @GetMapping("/admin/queryAllTerm")
+    @GetMapping("/admin/queryCurrentTerm")
     public R queryAllTerm() {
-        return R.OK(termService.getAllTerms());
+        return R.OK(termService.getCurrentTerm());
     }
 
     @PostMapping("/admin/updateTerm")
     public R updateTerm(@Valid updateTermRequest request) {
         return R.auto(termService.updateTermById(request.toTerm()));
     }
-
-    @GetMapping("/admin/deleteUser/{id}")
-    public R deleteUser(@PathVariable("id") String id) {
-        User user = userService.queryUserById(id);
-        if (user == null) return R.error(ResponseState.IllegalArgument, "用户不存在");
-        return R.auto(userService.deleteUser(user));
+    @GetMapping("/getTerm")
+    public R getTerm(){
+        Term currentTerm = termService.getCurrentTerm();
+        return R.OK(currentTerm);
     }
 
 }
