@@ -20,7 +20,7 @@ public class ExcelUtils {
 
     public static List<List<Object>> readAll(File excelFile){
         List<List<Object>> result = new ArrayList<>();
-        try(InputStream is = new FileInputStream(excelFile);){
+        try(InputStream is = new FileInputStream(excelFile)){
             HSSFWorkbook workbook = new HSSFWorkbook(is);
             //默认获取表1
             HSSFSheet sheet = workbook.getSheetAt(0);

@@ -15,13 +15,8 @@ import com.aurora.day.auroratimerservernative.config.TimerConfig;
 import com.aurora.day.auroratimerservernative.pojo.Term;
 import com.aurora.day.auroratimerservernative.pojo.TermTime;
 
-
 import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -32,51 +27,52 @@ import java.util.stream.Collectors;
 public class SchoolCalendarUtil {
     private static final Log logger = LogFactory.get();
 
-    public static TermTime getTermTime(){
+    public static TermTime getTermTime() {
         int year = DateUtil.thisYear();
-        String CalendarYear = year-1+"-"+year;
+        String CalendarYear = year - 1 + "-" + year;
         String PossibleSchoolCaleListUrl = "http://www.sgu.edu.cn/5m1t1l%e6%a0%a1%e5%8e%86.html";
         HttpRequest CaleListPageRequest = HttpUtil.createGet(PossibleSchoolCaleListUrl);
-        CaleListPageRequest.header("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36");
+        CaleListPageRequest.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36");
         String CaleListPage;
-        try(HttpResponse response = CaleListPageRequest.execute()) {
+        try (HttpResponse response = CaleListPageRequest.execute()) {
             CaleListPage = response.body();
         }
-        if(CaleListPage==null) return null;
-        String calePageUrl = findCalePageUrl(CaleListPage,CalendarYear);
-        String schoolCaleMatchingUrl = "http://www.sgu.edu.cn/"+calePageUrl;
+        if (CaleListPage == null) return null;
+        String calePageUrl = findCalePageUrl(CaleListPage, CalendarYear);
+        String schoolCaleMatchingUrl = "http://www.sgu.edu.cn/" + calePageUrl;
         HttpRequest CalePageRequest = HttpUtil.createGet(schoolCaleMatchingUrl);
-        CalePageRequest.header("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36");
+        CalePageRequest.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36");
         String calePage;
-        try(HttpResponse response =  CalePageRequest.execute()){
-           calePage  = response.body();
+        try (HttpResponse response = CalePageRequest.execute()) {
+            calePage = response.body();
         }
-        if(calePage==null) return null;
-        File caleFile = downloadCale(calePage,CalendarYear);
-        if(caleFile==null) {
+        if (calePage == null) return null;
+        File caleFile = downloadCale(calePage, CalendarYear);
+        if (caleFile == null) {
             return null;
         }
         ExcelReader reader = ExcelUtil.getReader(caleFile);
         List<List<Object>> readAll = reader.read();
-        List<Object> titles = readAll.stream().filter(list -> ((String) list.get(0)).contains("周历说明")).map(list -> list.get(0)).collect(Collectors.toList());
+        List<Object> titles = readAll.stream().filter(list -> ((String) list.get(0)).contains("校历说明")).map(list -> list.get(0)).collect(Collectors.toList());
         return toTerm(titles);
     }
 
-    private static String findCalePageUrl(String html,String CalendarYear){
+    private static String findCalePageUrl(String html, String CalendarYear) {
         return MatchingContext(html, CalendarYear);
     }
-    private static File downloadCale(String html,String CalendarYear){
+
+    private static File downloadCale(String html, String CalendarYear) {
         String matcherResult = MatchingContext(html, CalendarYear);
-        if(matcherResult!=null){
-            File caleFile = FileUtil.file(TimerConfig.filePath + "\\Calendar"+CalendarYear+".xls");
-            long size = HttpUtil.downloadFile(matcherResult,caleFile);
-            logger.info("下载校历:"+"下载大小:"+size);
+        if (matcherResult != null) {
+            File caleFile = FileUtil.file(TimerConfig.filePath + "\\Calendar" + CalendarYear + ".xls");
+            long size = HttpUtil.downloadFile(matcherResult, caleFile);
+            logger.info("下载校历:" + "下载大小:" + size);
             return caleFile;
         }//TODO if null
         return null;
     }
 
-    private static String  MatchingContext(String html, String CalendarYear) {
+    private static String MatchingContext(String html, String CalendarYear) {
         final String textRex = "<a[^>]+?href=\\\"([^\\\"]+)\\\"[^>]*?>(.*?学年校历.*?)</a>";
         Pattern pattern = Pattern.compile(textRex);
         Matcher matcher = pattern.matcher(html);
@@ -92,9 +88,9 @@ public class SchoolCalendarUtil {
     }
 
 
-    private static TermTime toTerm(List<Object> titles){
-        if(titles==null) return null;
-        String rex = "周历说明:([^\\d]+)(\\d+)天，从(\\d+月\\d+日)至(\\d+月\\d+日)";
+    private static TermTime toTerm(List<Object> titles) {
+        if (titles == null) return null;
+        String rex = "校历说明:([^\\d]+)(\\d+)天，从(\\d+月\\d+日)至(\\d+月\\d+日)";
         TermTime termTime = new TermTime();
         Map<String, Term> termList = new HashMap<>(2);
         for (Object title : titles) {
@@ -105,22 +101,27 @@ public class SchoolCalendarUtil {
                 int days = Integer.parseInt(matcher.group(2));
                 Date start = strToDate(matcher.group(3));
                 Date end = strToDate(matcher.group(4));
-                termList.put(type,new Term(days,start,end));
+                termList.put(type, new Term(start, end,days));
             }
         }
         Term summer = termList.get("暑假");
         Term winter = termList.get("寒假");
-        //TODO cal days;
-        int firstDays = 0;
-        int secondDays = 0;
-        termTime.first = new Term(firstDays,winter.end,summer.start);
-        //TODO 第二个学期还得知道明年的年历 ,先编一个
+        if(summer==null || winter==null){
+            return null;
+        }
         int year = DateUtil.thisYear();
-        termTime.second = new Term(secondDays,DateUtil.parseDate(year+"-08-01"),DateUtil.parseDate((year+1)+"-02-21"));
+        int secondDays = (int) DateUtil.betweenDay(winter.end, summer.start,false);
+        termTime.second = new Term(1,secondDays,winter.end, summer.start,year-1+"学年(第二学期)");
+        //下个学年的第一学期需要后一年的年历，可以用本年的寒假推算一下，误差应该不会很大。
+        Calendar fakeCalendar = Calendar.getInstance();
+        fakeCalendar.setTime(winter.start);
+        fakeCalendar.set(Calendar.YEAR,year+1);
+        int firstDays = (int)DateUtil.betweenDay(summer.end,fakeCalendar.getTime(),false);
+        termTime.first = new Term(2,firstDays,summer.end,fakeCalendar.getTime(),year+"学年(第一学期)");
         return termTime;
     }
 
-    private static Date strToDate(String uncommonDateStr){
+    private static Date strToDate(String uncommonDateStr) {
         int year = DateUtil.thisYear();
         String temp = year + "年" + uncommonDateStr;
         DateTime parse = DateUtil.parse(temp, DatePattern.CHINESE_DATE_FORMAT);
@@ -128,20 +129,21 @@ public class SchoolCalendarUtil {
     }
 
     //读取本地校历文件获得学期情况。
-    public static TermTime getTermTimeLocal(){
+    public static TermTime getTermTimeLocal() {
         int year = DateUtil.thisYear();
-        String CalendarYear = year-1+"-"+year;
+        String CalendarYear = year - 1 + "-" + year;
         List<Object> titles = null;
-        try{
-            File caleFile = FileUtil.file(TimerConfig.filePath + "\\Calendar"+CalendarYear+".xls");
-            List<List<Object>> readAll = ExcelUtils.readAll(caleFile);
-            titles = readAll.stream().filter(list -> ((String) list.get(0)).contains("周历说明")).map(list -> list.get(0)).collect(Collectors.toList());
-        }catch (Exception e){
-            if(e instanceof IOException){
+        try {
+            File caleFile = FileUtil.file(TimerConfig.filePath + "\\Calendar" + CalendarYear + ".xls");
+            if (caleFile.exists()) {
+                List<List<Object>> readAll = ExcelUtils.readAll(caleFile);
+                titles = readAll.stream().filter(list -> ((String) list.get(0)).contains("校历说明")).map(list -> list.get(0)).collect(Collectors.toList());
+            } else {
                 logger.warn("日历文件读取失败");
                 return null;
             }
-            logger.warn("POI出错:{}",e);
+        } catch (Exception e) {
+            logger.warn("POI出错:{}", e);
         }
         return toTerm(titles);
     }

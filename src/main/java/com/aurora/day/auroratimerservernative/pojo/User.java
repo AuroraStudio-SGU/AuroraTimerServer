@@ -15,23 +15,16 @@ public class User {
     private String name;
     private String password;
     private String avatar;
-    private boolean admin;
-    private boolean afk;
-    private long reduceTime;
-    private int unfinishedCount;
+    private Boolean admin = null;
+    private Boolean afk = null;
+    private Long reduceTime  = null;
+    private Integer unfinishedCount = null;
     private String major;
     private String grade;
     private String workGroup;
-    private int priv;
+    private Integer priv = null;
 
     public User() {
         this.avatar = TimerConfig.avatarDefaultUrl;
-        this.admin = false;
-        this.afk = false;
-        this.reduceTime = 0L;
-        this.unfinishedCount = 0;
-        this.priv = 0;
     }
-
-
 }

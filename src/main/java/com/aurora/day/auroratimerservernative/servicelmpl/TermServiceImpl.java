@@ -5,6 +5,7 @@ import com.aurora.day.auroratimerservernative.config.TimerConfig;
 import com.aurora.day.auroratimerservernative.mapper.TermMapper;
 import com.aurora.day.auroratimerservernative.pojo.Notice;
 import com.aurora.day.auroratimerservernative.pojo.Term;
+import com.aurora.day.auroratimerservernative.pojo.TermTime;
 import com.aurora.day.auroratimerservernative.service.ITermService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,31 @@ public class TermServiceImpl implements ITermService {
 
     @Override
     public boolean updateTermById(Term term) {
-        return termMapper.updateById(term)==1;
+        QueryWrapper<Term> wrapper = new QueryWrapper<>();
+        wrapper.eq("id",term.getId());
+        if(termMapper.exists(wrapper)){
+            return termMapper.updateById(term)==1;
+        }else {
+            return termMapper.insert(term)==1;
+        }
+    }
+
+    @Override
+    public boolean updateTermTime(TermTime termTime) {
+        int op = 0;
+        QueryWrapper<Term> first = new QueryWrapper<Term>().eq("id",termTime.first.getId());
+        if(termMapper.exists(first)){
+            op+=termMapper.updateById(termTime.first);
+        }else {
+            op+=termMapper.insert(termTime.first);
+        }
+        QueryWrapper<Term> second = new QueryWrapper<Term>().eq("id",termTime.second.getId());
+        if(termMapper.exists(second)){
+            op+=termMapper.updateById(termTime.second);
+        }else {
+            op+=termMapper.insert(termTime.second);
+        }
+        return op==2;
     }
 
     @Override
@@ -33,13 +58,9 @@ public class TermServiceImpl implements ITermService {
         return termMapper.selectList(null);
     }
 
+    @Deprecated
     @Override
     public boolean insertTerm(Term term) {
-        if(termMapper.selectCount(null)>= TimerConfig.TermSize){
-            QueryWrapper<Term> wrapper = new QueryWrapper<>();
-            wrapper.orderByAsc("id").last("limit 1");//not safe sql
-            termMapper.delete(wrapper);
-        }
         return termMapper.insert(term)==1;
     }
 

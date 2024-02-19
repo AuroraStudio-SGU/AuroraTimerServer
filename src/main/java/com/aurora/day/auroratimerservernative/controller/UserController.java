@@ -61,12 +61,19 @@ public class UserController {
             logger.warn("成员{}的权限获取失败", user.getId());
             priv = PrivilegeEnum.Normal;
         }
-        vo.setToken(TokenUtil.createToken(user.getId(), user.isAdmin(), priv));
+        vo.setToken(TokenUtil.createToken(user.getId(), user.getAdmin(), priv));
         return R.OK(vo);
     }
 
     @PostMapping("/user/update")
-    public R updateUser(@Valid @RequestBody updateUserRequest request) {
+    public R updateUser(@Valid @RequestBody updateUserRequest request,HttpServletRequest httpServletRequest) {
+        if(request.getPriv()!=null){
+            //修改权限需要鉴定权限
+            PrivilegeEnum priv = TokenUtil.getPriv(httpServletRequest.getHeader("token"));
+            if(priv==null || priv.val< request.getPriv()){
+                return R.error(ResponseState.AuthorizationError,"越权操作!");
+            }
+        }
         User user = conventHelper.toUser(request);
         if (userService.updateUser(user)) return R.OK();
         else return R.error(ResponseState.DateBaseError, "数据库更新失败");
@@ -100,7 +107,7 @@ public class UserController {
     public R generateToken(@PathVariable("id") String id, HttpServletRequest servletRequest) {
         User user = userService.queryUserById(id);
         if (user == null) return R.error(ResponseState.IllegalArgument, "用户不存在");
-        return R.OK(TokenUtil.createToken(user.getId(), user.isAdmin(), PrivilegeEnum.conventToEnum(user.getPriv())));
+        return R.OK(TokenUtil.createToken(user.getId(), user.getAdmin(), PrivilegeEnum.conventToEnum(user.getPriv())));
     }
 
 
@@ -113,7 +120,7 @@ public class UserController {
             if (time == null) time = 0L;
             UserVo vo = conventHelper.toVo(user);
             vo.setCurrentWeekTime(time);
-            vo.setToken(TokenUtil.createToken(user.getId(), user.isAdmin(), PrivilegeEnum.conventToEnum(user.getPriv())));
+            vo.setToken(TokenUtil.createToken(user.getId(), user.getAdmin(), PrivilegeEnum.conventToEnum(user.getPriv())));
             return R.OK(vo);
         } else {
             return R.error(ResponseState.AuthorizationError, "token不正确或token已过期");

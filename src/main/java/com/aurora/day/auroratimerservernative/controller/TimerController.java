@@ -187,6 +187,17 @@ public class TimerController {
                     throw new RuntimeException("Create folder fail");
                 }
             }
+            //检查下文件存放数量是否太多，进行清理
+            if(folder.isDirectory()){
+                File[] files = folder.listFiles();
+                //懒得写config了
+                if(files!=null && files.length>=20){
+                    Arrays.sort(files,(o1, o2) -> Math.toIntExact(o2.lastModified() - o1.lastModified()));
+                    for (int i = 0; i < 10; i++) {
+                        files[i].deleteOnExit();
+                    }
+                }
+            }
             String fileName = System.currentTimeMillis() + "-" + file.getOriginalFilename();
             File imageFile = FileUtil.file(folder,fileName);
             FileUtil.writeBytes(file.getBytes(),imageFile);

@@ -28,9 +28,7 @@ public class BadRequestExceptionHandler {
             List<ObjectError> errors = exceptions.getAllErrors();
             List<String> errorMsgList = new ArrayList<>(errors.size());
             if (!errors.isEmpty()) {
-                errors.forEach(objectError -> {
-                    errorMsgList.add(objectError.getDefaultMessage());
-                });
+                errors.forEach(objectError -> errorMsgList.add(objectError.getDefaultMessage()));
                 return R.errorList(ResponseState.IllegalArgument,errorMsgList);
             }
         }

@@ -8,7 +8,6 @@ import cn.hutool.log.LogFactory;
 import com.aurora.day.auroratimerservernative.config.TimerConfig;
 import com.aurora.day.auroratimerservernative.exceptions.TimeServicesException;
 import com.aurora.day.auroratimerservernative.exceptions.UserServicesException;
-
 import com.aurora.day.auroratimerservernative.mapper.TargetTimeMapper;
 import com.aurora.day.auroratimerservernative.mapper.UserMapper;
 import com.aurora.day.auroratimerservernative.mapper.UserTimeMapper;
@@ -17,7 +16,6 @@ import com.aurora.day.auroratimerservernative.schemes.eums.ResponseState;
 import com.aurora.day.auroratimerservernative.service.ITermService;
 import com.aurora.day.auroratimerservernative.service.IUserTimeService;
 import com.aurora.day.auroratimerservernative.utils.SchoolCalendarUtil;
-import com.aurora.day.auroratimerservernative.pojo.UserOnlineTime;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +34,7 @@ public class UserTimeServiceImpl implements IUserTimeService {
     private final TargetTimeMapper targetTimeMapper;
     private final UserMapper userMapper;
     private final ITermService termService;
+    private static boolean Querying = false;
 
     @Override
     public long addTime(String id, int time) {
@@ -89,24 +88,38 @@ public class UserTimeServiceImpl implements IUserTimeService {
         String weekEnd = DateUtil.format(CalendarUtil.endOfWeek(DateUtil.offsetWeek(DateUtil.date(), -x).toCalendar()).getTime(), DatePattern.NORM_DATE_PATTERN);
         //获取当前学期的日期范围
         Term currentTerm = termService.getCurrentTerm();
-        if(currentTerm==null){
-            //尝试从校历获取
-            TermTime termTime = SchoolCalendarUtil.getTermTimeLocal();
-            if(termTime==null){
-                try{
-                    termTime = SchoolCalendarUtil.getTermTime();
-                }catch (Throwable t){
-                    logger.warn("线上获取校历失败:{}",t);
+        if (currentTerm == null) {
+            //防止多个线程同时查询
+            synchronized (this) {
+                if(currentTerm==null &&!Querying){
+                    Querying = true;
+                    //尝试从本地校历获取
+                    try{
+                        TermTime termTime = SchoolCalendarUtil.getTermTimeLocal();
+                        if (termTime == null) {
+                            try {
+                                //从学校官网下载
+                                termTime = SchoolCalendarUtil.getTermTime();
+                            } catch (Throwable t) {
+                                logger.warn("线上获取校历失败:{}", t);
+                            }
+                            if (termTime == null) {
+                                //make fake term for temple use
+                                currentTerm = Term.makeTempleTerm();
+                                termService.updateTermById(currentTerm);
+                            }
+                        }else {
+                            currentTerm = termTime.getCurrentTerm();
+                            termService.updateTermTime(termTime);
+                        }
+                    }catch (Exception ignored){
+                        logger.warn(ignored);
+                    }
+                    finally {
+                        Querying=false;
+                    }
                 }
             }
-            if(termTime!=null){
-                currentTerm = termTime.getCurrentTerm();
-            }
-            if(currentTerm==null){
-                //make fake term for temple use
-                currentTerm = Term.makeTempleTerm();
-            }
-            termService.insertTerm(currentTerm);
         }
         String TermStart = DateUtil.format(currentTerm.start, DatePattern.NORM_DATE_PATTERN);
         String TermEnd = DateUtil.format(currentTerm.end, DatePattern.NORM_DATE_PATTERN);
@@ -132,9 +145,10 @@ public class UserTimeServiceImpl implements IUserTimeService {
         String week_end = DateUtil.endOfWeek(now).toString(DatePattern.NORM_DATE_PATTERN);
         return userTimeMapper.queryUserWeekTime(id, week_start, week_end);
     }
+
     @Deprecated
     @Override
-    public boolean transferOldTime(String start, String end,String id) {
+    public boolean transferOldTime(String start, String end, String id) {
         return false;
     }
 
@@ -142,7 +156,7 @@ public class UserTimeServiceImpl implements IUserTimeService {
     public List<UserTime> queryTime(String id, String start, String end) {
         User user = userMapper.selectById(id);
         if (user == null) throw new UserServicesException(ResponseState.IllegalArgument.replaceMsg("用户不存在"));
-        return userTimeMapper.queryTime(user.getId(),start,end);
+        return userTimeMapper.queryTime(user.getId(), start, end);
     }
 
 }

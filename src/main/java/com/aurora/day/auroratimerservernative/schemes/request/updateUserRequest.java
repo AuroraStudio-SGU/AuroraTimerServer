@@ -10,5 +10,6 @@ public class updateUserRequest {
     private String major;
     private String grade;
     private String workGroup;
-    private boolean afk;
+    private Boolean afk;
+    private Integer priv;
 }

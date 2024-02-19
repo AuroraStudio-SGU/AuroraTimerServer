@@ -71,7 +71,7 @@ public class R implements Serializable {
         if (isFullTrack) {
             node.set("stacks", JsonHelper.newArrayNode(Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.toList())));
         } else {
-            node.put("stacks", JsonHelper.newArrayNode(Arrays.copyOfRange(e.getStackTrace(), 0, 10)));
+            node.set("stacks", JsonHelper.newArrayNode(Arrays.copyOfRange(e.getStackTrace(), 0, 10)));
         }
         return R.error(state, node);
     }

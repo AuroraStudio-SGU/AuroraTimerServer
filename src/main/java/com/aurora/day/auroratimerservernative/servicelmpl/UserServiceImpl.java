@@ -1,6 +1,8 @@
 package com.aurora.day.auroratimerservernative.servicelmpl;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.log.Log;
+import cn.hutool.log.LogFactory;
 import com.aurora.day.auroratimerservernative.exceptions.UserServicesException;
 import com.aurora.day.auroratimerservernative.mapper.UserMapper;
 import com.aurora.day.auroratimerservernative.mapper.UserTimeMapper;
@@ -13,11 +15,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements IUserService {
+
+    private static final Log logger = LogFactory.get("UserService");
 
     private final UserMapper userMapper;
     private final UserTimeMapper userTimeMapper;
@@ -26,23 +31,28 @@ public class UserServiceImpl implements IUserService {
     public User registerUser(User newUser) {
         User temp = userMapper.selectById(newUser.getId());
         if (temp != null) throw new UserServicesException(ResponseState.IllegalArgument.replaceMsg("该学号已被注册"));
-        if (userMapper.insert(newUser) != 1) throw new UserServicesException(ResponseState.DateBaseError.replaceMsg("插入数据库失败"));
+        if (userMapper.insert(newUser) != 1)
+            throw new UserServicesException(ResponseState.DateBaseError.replaceMsg("插入数据库失败"));
         return newUser;
     }
 
     @Override
     public User loginUser(String id, String password) {
-        QueryWrapper<User> userWrapper = new QueryWrapper<>();
-        userWrapper.eq(id != null, "id", id)
-                .eq(password != null, "password", password);
-        return userMapper.selectOne(userWrapper);//TODO 要假设会出现多条数据
+        try {
+            QueryWrapper<User> userWrapper = new QueryWrapper<>();
+            userWrapper.eq(id != null, "id", id)
+                    .eq(password != null, "password", password);
+            return userMapper.selectOne(userWrapper);//TODO 要假设会出现多条数据
+        } catch (Exception e) {
+            logger.warn("多用户查询,用户id:" + id);
+            throw e;
+        }
     }
 
     @Override
     public boolean updateUser(User user) {
         User temp = userMapper.selectById(user.getId());
         if (temp == null) throw new UserServicesException(ResponseState.IllegalArgument.replaceMsg("用户不存在"));
-        user.setAdmin(temp.isAdmin()); //布尔值更新需要先获取原来的布尔值
         return userMapper.updateById(user) == 1;
     }
 
@@ -56,9 +66,13 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public User queryUserById(String id) {
-        return userMapper.selectOne(new QueryWrapper<User>().eq(!StrUtil.isBlankIfStr(id), "id", id));
+        try {
+            return userMapper.selectOne(new QueryWrapper<User>().eq(!StrUtil.isBlankIfStr(id), "id", id));
+        } catch (Exception e) {
+            logger.warn("多用户查询,用户id:" + id);
+            throw e;
+        }
     }
-
     @Override
     public boolean setUserReduceTimeById(String id, long time) {
         User user = userMapper.selectById(id);

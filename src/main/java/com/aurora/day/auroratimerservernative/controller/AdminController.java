@@ -42,7 +42,7 @@ public class AdminController {
     }
 
 
-    @GetMapping("/admin/queryAllUser")
+    @GetMapping("/manager/queryAllUser")
     public R getUserList(@RequestParam(value = "withAFK", defaultValue = "false") boolean withAFK) {
         return R.OK(userService.getUserList(withAFK));
     }
@@ -91,9 +91,15 @@ public class AdminController {
         return R.auto(termService.updateTermById(request.toTerm()));
     }
     @GetMapping("/getTerm")
+    @Deprecated
     public R getTerm(){
         Term currentTerm = termService.getCurrentTerm();
         return R.OK(currentTerm);
+    }
+
+    @GetMapping("/TermTime")
+    public R getTermTime(){
+        return R.OK(termService.getAllTerms());
     }
 
 }

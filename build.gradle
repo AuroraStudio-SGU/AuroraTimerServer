@@ -7,7 +7,7 @@ plugins {
 
 
 group = 'com.aurora.day'
-version = '0.0.1'
+version = '0.0.2'
 
 java {
     sourceCompatibility = '17'
@@ -61,8 +61,12 @@ graalvmNative {
             buildArgs.add('-H:+AddAllCharsets')
         }
     }
+    binaries.all {
+        buildArgs.add("-march=compatibility")
+    }
     metadataRepository {
         enabled = true
     }
+
 }
 

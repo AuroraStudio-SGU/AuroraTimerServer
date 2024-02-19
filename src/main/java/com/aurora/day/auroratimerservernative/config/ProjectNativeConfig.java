@@ -14,7 +14,6 @@ import org.springframework.context.annotation.ImportRuntimeHints;
 public class ProjectNativeConfig implements RuntimeHintsRegistrar {
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
-        //偷偷加个poi
         //需要序列化输出的对象都要在这里注册
         hints.serialization().registerType(R.class);
         hints.serialization().registerType(UserVo.class);

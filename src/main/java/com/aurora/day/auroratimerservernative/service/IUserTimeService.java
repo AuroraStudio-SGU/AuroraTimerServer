@@ -50,7 +50,7 @@ public interface IUserTimeService {
      * 将旧的数据迁移到新数据库当中
      * @param start 开始时间
      * @param end 结束时间
-     * @parm id 是否指定成员
+     * @param id 是否指定成员
      * @return 是否成功
      */
     @Deprecated

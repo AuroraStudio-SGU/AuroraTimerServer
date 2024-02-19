@@ -26,3 +26,6 @@ timer:
   notice-size: 10
   duty-size: 10
   term-size: 10
+logging:
+  file:
+    name: timer.log

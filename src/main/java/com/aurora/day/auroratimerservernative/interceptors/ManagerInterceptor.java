@@ -23,7 +23,7 @@ public class ManagerInterceptor implements HandlerInterceptor {
             return true;//预检请求默认通过
         }
         PrivilegeEnum privilege = TokenUtil.getPriv(request.getHeader("token"));
-        if (privilege == null || privilege.equals(PrivilegeEnum.Normal)) {
+        if (privilege == null || privilege.equals(PrivilegeEnum.Normal) || privilege.equals(PrivilegeEnum.Examining)) {
             //这里权限为空也作为正常用户了,先观望一会,等权限完善了再修改(2023/11/27)
             response.sendError(ResponseState.AuthorizationError.getCode(), ResponseState.AuthorizationError.getMsg());
             return false;

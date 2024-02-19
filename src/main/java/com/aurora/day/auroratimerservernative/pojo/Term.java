@@ -9,55 +9,82 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.poi.ss.formula.functions.T;
 
 import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Date;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @TableName("term")
+@AllArgsConstructor
 public class Term implements Serializable {
-    @TableId(value = "id",type = IdType.AUTO)
+    @TableId(value = "id")
     private Integer id;
-    @TableField(exist = false)
     public Integer days;
     public Date start;
     public Date end;
+    @TableField("update_time")
+    public Date updateTime;
+    public String name;
 
 
-    public Term(int days, Date start, Date end) {
+    public Term(int id,Integer days, Date start, Date end,String name) {
+        this.id = id;
         this.days = days;
         this.start = start;
         this.end = end;
+        this.updateTime = new Date();
+        this.name = name;
+    }
+    public Term(Date start, Date end,int days) {
+        this.days = days;
+        this.start = start;
+        this.end = end;
+        this.updateTime = new Date();
     }
 
-    //编一个勉强能用的
+    public Term(int id,String name){
+        this.id = id;
+        this.name = name;
+        this.updateTime = new Date();
+    }
+
+    /**
+     * 返回一个认为编写的学期，应急使用
+     * @return
+     */
     public static Term makeTempleTerm(){
-        Term term = new Term();
-        Calendar calendar = Calendar.getInstance();
-        int month = calendar.get(Calendar.MONTH);
-        int year = calendar.get(Calendar.YEAR);
-        Calendar end = Calendar.getInstance();
+        int termId = 1;
         Calendar start = Calendar.getInstance();
-        start.set(Calendar.DAY_OF_MONTH,1);
-        end.set(Calendar.DAY_OF_MONTH,1);
-        if(month>=2 && month<=7){//new 第二学期
-            start.set(Calendar.MONTH,2);
-            end.set(Calendar.MONTH,7);
-        }else {
-            if(month>=9){
-                end.set(Calendar.YEAR,year+1);
-                start.set(Calendar.MONTH,9);
-            }else {
-                start.set(Calendar.YEAR,year-1);
-            }
+        Calendar end = Calendar.getInstance();
+        int year = start.get(Calendar.YEAR);
+        int month = start.get(Calendar.MONTH);
+        String name = year + "学年(第一学期)";
+        if(month>8){
+            start.set(Calendar.MONTH,Calendar.SEPTEMBER);
+            start.set(Calendar.DAY_OF_MONTH,1);
+            end.set(Calendar.YEAR,year+1);
             end.set(Calendar.MONTH,1);
+            end.set(Calendar.DAY_OF_MONTH,31);
+        }else {
+            termId = 2;
+            name = year-1 + "学年(第二学期)";
+            start.set(Calendar.MONTH,Calendar.FEBRUARY);
+            start.set(Calendar.DAY_OF_MONTH,20);
+            end.set(Calendar.MONTH,Calendar.JUNE);
+            end.set(Calendar.DAY_OF_MONTH,30);
         }
-        term.start = start.getTime();
-        term.end = end.getTime();
-        return term;
+        Term fakeTerm = new Term(termId,name);
+        fakeTerm.start = start.getTime();
+        fakeTerm.end = end.getTime();
+        long days = DateUtil.betweenDay(fakeTerm.start,fakeTerm.end,false);
+        if(days>Integer.MAX_VALUE){
+            fakeTerm.days = Integer.MAX_VALUE;
+        }else {
+            fakeTerm.days = (int)days;
+        }
+        return fakeTerm;
     }
 
     @Override
