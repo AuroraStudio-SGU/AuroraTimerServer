@@ -10,18 +10,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.io.IOException;
-
 @Component
-public class AdminInterceptor implements HandlerInterceptor {
+public class DutyInterceptor implements HandlerInterceptor {
+
     @Autowired
     IUserService userService;
+
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws RuntimeException, IOException {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         if (request.getMethod().equals("OPTIONS")) return true;//预检请求默认通过
-        if (userService.queryPriv(TokenUtil.getId(request.getHeader("token"))).equals(PrivilegeEnum.Admin)) return true;
-        else {
-            response.sendError(ResponseState.AuthorizationError.getCode(),ResponseState.AuthorizationError.getMsg());
+        PrivilegeEnum privEnum = userService.queryPriv(TokenUtil.getId(request.getHeader("token")));
+        if(privEnum.equals(PrivilegeEnum.DutyManager) || privEnum.equals(PrivilegeEnum.Admin)){
+            return true;
+        }else {
+            response.sendError(ResponseState.AuthorizationError.getCode(), ResponseState.AuthorizationError.getMsg());
             return false;
         }
     }

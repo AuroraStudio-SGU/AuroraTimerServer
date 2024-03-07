@@ -8,12 +8,15 @@ import com.aurora.day.auroratimerservernative.schemes.request.UpLoadNoticeReques
 import com.aurora.day.auroratimerservernative.schemes.request.setDutyRequest;
 import com.aurora.day.auroratimerservernative.schemes.request.updateTermRequest;
 import com.aurora.day.auroratimerservernative.service.*;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.apache.ibatis.annotations.Delete;
 import org.noear.snack.ONode;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.Arrays;
 
 @RestController
 @CrossOrigin
@@ -47,7 +50,7 @@ public class AdminController {
         return R.OK(userService.getUserList(withAFK));
     }
 
-    @PostMapping("/admin/setDuty")
+    @PostMapping("/duty/setDuty")
     public R setDuty(@Valid @RequestBody setDutyRequest request) {
         return R.auto(dutyService.pushDutyList(request.getWed(), request.getSun()));
     }
@@ -68,12 +71,13 @@ public class AdminController {
         return R.OK();
     }
 
+    @Deprecated
     @GetMapping("/admin/syncTimeFromOldData/{id}")
     public R syncDate(@RequestParam(value = "start", required = false) String start,
                       @RequestParam(value = "end", required = false) String end,
                       @PathVariable(value = "id",required = false) String id
     ) {
-        return R.error(ResponseState.ERROR.replaceMsg("该功能仍需维护测试"));
+        return R.error(ResponseState.ERROR.replaceMsg("该功能已废弃"));
 //        if(id==null){
 //            return R.error(ResponseState.IllegalArgument.replaceMsg("生产环境还是带上id把"));
 //        }
@@ -101,5 +105,7 @@ public class AdminController {
     public R getTermTime(){
         return R.OK(termService.getAllTerms());
     }
+
+
 
 }

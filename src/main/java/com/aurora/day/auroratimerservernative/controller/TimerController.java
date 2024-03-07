@@ -8,6 +8,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONObject;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.aurora.day.auroratimerservernative.cache.RankCache;
@@ -127,6 +128,9 @@ public class TimerController {
     //心跳包
     @GetMapping("/ping")
     public R heartPackage() {
+        JSONObject json = new JSONObject();
+        json.set("pong","pong");
+        json.set("version","0.0.3");
         return R.OK("pong");
     }
 
@@ -210,6 +214,16 @@ public class TimerController {
             response.setMessage(t.getCause().getLocalizedMessage()==null?"空指针异常":t.getCause().getLocalizedMessage());
             return response;
         }
+    }
+    private static String MINI_VERSION = "0.0.12";
+    @GetMapping("/getMiniVersion")
+    public R getMiniVersion(){
+        return R.OK(MINI_VERSION);
+    }
+    @GetMapping("/setMiniVersion/{version}")
+    public R setMiniVersion(@PathVariable("version")String version){
+        MINI_VERSION = version;
+        return R.OK();
     }
 
 }

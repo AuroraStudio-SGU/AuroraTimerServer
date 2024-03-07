@@ -8,6 +8,7 @@ import com.aurora.day.auroratimerservernative.mapper.UserMapper;
 import com.aurora.day.auroratimerservernative.mapper.UserTimeMapper;
 import com.aurora.day.auroratimerservernative.pojo.User;
 import com.aurora.day.auroratimerservernative.pojo.UserTime;
+import com.aurora.day.auroratimerservernative.schemes.eums.PrivilegeEnum;
 import com.aurora.day.auroratimerservernative.schemes.eums.ResponseState;
 import com.aurora.day.auroratimerservernative.service.IUserService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -15,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Service
@@ -73,6 +73,7 @@ public class UserServiceImpl implements IUserService {
             throw e;
         }
     }
+
     @Override
     public boolean setUserReduceTimeById(String id, long time) {
         User user = userMapper.selectById(id);
@@ -93,5 +94,33 @@ public class UserServiceImpl implements IUserService {
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
+    }
+
+    @Transactional
+    @Override
+    public boolean batchDeleteUser(List<String> ids) {
+        int count = userMapper.deleteBatchIds(ids);
+        try {
+            QueryWrapper<UserTime> wrapper = new QueryWrapper<>();
+            wrapper.in("user_id",ids);
+            userTimeMapper.delete(wrapper);
+        } catch (Throwable e) {
+            logger.warn(e);
+            throw new UserServicesException(ResponseState.DateBaseError.replaceMsg("数据库异常"));
+        }
+        if (count != ids.size()) {
+            throw new UserServicesException(ResponseState.DateBaseError.replaceMsg("数据库异常"));
+        } else {
+            return true;
+        }
+    }
+
+    @Override
+    public PrivilegeEnum queryPriv(String id) {
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
+        wrapper.select("priv");
+        wrapper.eq(!id.isBlank(), "id", id);
+        User temp = userMapper.selectOne(wrapper);
+        return PrivilegeEnum.conventToEnum(temp.getPriv());
     }
 }

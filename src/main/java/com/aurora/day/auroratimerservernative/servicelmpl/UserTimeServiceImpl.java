@@ -103,11 +103,6 @@ public class UserTimeServiceImpl implements IUserTimeService {
                             } catch (Throwable t) {
                                 logger.warn("线上获取校历失败:{}", t);
                             }
-                            if (termTime == null) {
-                                //make fake term for temple use
-                                currentTerm = Term.makeTempleTerm();
-                                termService.updateTermById(currentTerm);
-                            }
                         }else {
                             currentTerm = termTime.getCurrentTerm();
                             termService.updateTermTime(termTime);
@@ -120,6 +115,11 @@ public class UserTimeServiceImpl implements IUserTimeService {
                     }
                 }
             }
+        }
+        if(currentTerm==null){
+            //make fake term for temple use
+            currentTerm = Term.makeTempleTerm();
+            termService.updateTermById(currentTerm);
         }
         String TermStart = DateUtil.format(currentTerm.start, DatePattern.NORM_DATE_PATTERN);
         String TermEnd = DateUtil.format(currentTerm.end, DatePattern.NORM_DATE_PATTERN);

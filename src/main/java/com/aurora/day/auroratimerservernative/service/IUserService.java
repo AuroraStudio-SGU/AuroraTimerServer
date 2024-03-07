@@ -1,6 +1,7 @@
 package com.aurora.day.auroratimerservernative.service;
 
 import com.aurora.day.auroratimerservernative.pojo.User;
+import com.aurora.day.auroratimerservernative.schemes.eums.PrivilegeEnum;
 
 import java.util.List;
 
@@ -54,4 +55,12 @@ public interface IUserService {
      * @return 是否删除成功
      */
     boolean deleteUser(User user);
+
+    /**
+     * 批量删除用户
+     * @param ids id列表
+     * @return
+     */
+    boolean batchDeleteUser(List<String> ids);
+    PrivilegeEnum queryPriv(String id);
 }

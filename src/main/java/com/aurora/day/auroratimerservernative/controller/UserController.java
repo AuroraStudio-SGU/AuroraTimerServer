@@ -7,6 +7,7 @@ import cn.hutool.log.LogFactory;
 import com.aurora.day.auroratimerservernative.config.TimerConfig;
 import com.aurora.day.auroratimerservernative.mapper.UserMapper;
 import com.aurora.day.auroratimerservernative.pojo.User;
+import com.aurora.day.auroratimerservernative.pojo.UserVo;
 import com.aurora.day.auroratimerservernative.schemes.R;
 import com.aurora.day.auroratimerservernative.schemes.eums.PrivilegeEnum;
 import com.aurora.day.auroratimerservernative.schemes.eums.ResponseState;
@@ -17,7 +18,6 @@ import com.aurora.day.auroratimerservernative.service.IUserService;
 import com.aurora.day.auroratimerservernative.service.IUserTimeService;
 import com.aurora.day.auroratimerservernative.utils.ConvertMapper;
 import com.aurora.day.auroratimerservernative.utils.TokenUtil;
-import com.aurora.day.auroratimerservernative.pojo.UserVo;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -26,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.io.File;
+import java.util.Arrays;
 
 @RestController
 @CrossOrigin
@@ -66,12 +67,12 @@ public class UserController {
     }
 
     @PostMapping("/user/update")
-    public R updateUser(@Valid @RequestBody updateUserRequest request,HttpServletRequest httpServletRequest) {
-        if(request.getPriv()!=null){
+    public R updateUser(@Valid @RequestBody updateUserRequest request, HttpServletRequest httpServletRequest) {
+        if (request.getPriv() != null) {
             //修改权限需要鉴定权限
             PrivilegeEnum priv = TokenUtil.getPriv(httpServletRequest.getHeader("token"));
-            if(priv==null || priv.val< request.getPriv()){
-                return R.error(ResponseState.AuthorizationError,"越权操作!");
+            if (priv == null || priv.val < request.getPriv()) {
+                return R.error(ResponseState.AuthorizationError, "越权操作!");
             }
         }
         User user = conventHelper.toUser(request);
@@ -166,6 +167,7 @@ public class UserController {
         PrivilegeEnum priv = TokenUtil.getPriv(request.getHeader("token"));
         return R.OK(priv.toJSON());
     }
+
     @GetMapping("/user/getPrivList")
     public R getPrivList() {
         return R.OK(PrivilegeEnum.PrivList);
@@ -176,5 +178,15 @@ public class UserController {
         User user = userService.queryUserById(id);
         if (user == null) return R.error(ResponseState.IllegalArgument, "用户不存在");
         return R.auto(userService.deleteUser(user));
+    }
+
+    @DeleteMapping("manager/batchDelete")
+    public R batchDelete(@RequestParam("ids") String[] ids) {
+        boolean success = userService.batchDeleteUser(Arrays.asList(ids));
+        if (success) {
+            return R.OK();
+        } else {
+            return R.error(ResponseState.DateBaseError);
+        }
     }
 }
