@@ -1,6 +1,8 @@
 package com.aurora.day.auroratimerservernative.servicelmpl;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.SecureUtil;
+import cn.hutool.crypto.digest.MD5;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.aurora.day.auroratimerservernative.exceptions.UserServicesException;
@@ -31,6 +33,7 @@ public class UserServiceImpl implements IUserService {
     public User registerUser(User newUser) {
         User temp = userMapper.selectById(newUser.getId());
         if (temp != null) throw new UserServicesException(ResponseState.IllegalArgument.replaceMsg("该学号已被注册"));
+        newUser.setPassword(SecureUtil.md5(newUser.getPassword()));
         if (userMapper.insert(newUser) != 1)
             throw new UserServicesException(ResponseState.DateBaseError.replaceMsg("插入数据库失败"));
         return newUser;
