@@ -1,0 +1,42 @@
+server.port: 8084
+
+solon.app:
+  name: 'AuroraTimerServer'
+  group: 'aurora'
+
+
+solon.threads.virtual.enabled: true
+
+mybatis-flex:
+  #  mybatis-flex 数据源配置
+  datasource:
+    db1:
+      type: "com.zaxxer.hikari.HikariDataSource"
+      jdbcUrl: "jdbc:postgresql://localhost:5432/timer_pg"
+      driverClassName: "org.postgresql.Driver"
+      username: "postgresql"
+      password: "${DB_PSW}"
+  #  mybatis-flex 其它配置
+  type-aliases-package: #支持包名 或 类名（大写开头 或 *）//支持 ** 或 * 占位符
+    - "com.aurora.day.auroratimerserver.model"
+  mapper-locations: #支持包名 或 类名（大写开头 或 *）或 xml（.xml结尾）//支持 ** 或 * 占位符
+    - "com.aurora.day.auroratimerserver.mapper"
+  configuration: #扩展配置（要与 FlexConfiguration 类的属性一一对应）
+    cacheEnabled: false
+    mapUnderscoreToCamelCase: true
+  global-config: #全局配置（要与 FlexGlobalConfig 类的属性一一对应）//只是示例，别照抄
+    printBanner: false
+
+solon.logging.appender:
+  console:
+    level: TRACE
+    enable: true #是否启用
+    pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-56(%cyan(%-40.40logger{39}%L)) : %msg%n" #Spring Boot风格格式
+  file:
+    name: "logs/${solon.app.name}"
+    level: INFO
+    enable: true #是否启用
+    extension: ".log.gz"
+    maxFileSize: "50 MB"
+    maxHistory: "7"
+    pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-56(%-40.40logger{39}%L) : %msg%n" #Spring Boot风格格式

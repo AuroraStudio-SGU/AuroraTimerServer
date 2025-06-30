@@ -1,0 +1,69 @@
+plugins {
+    id "java"
+    id "maven-publish"
+    id("io.freefair.lombok") version "8.14"
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url "https://mirrors.cloud.tencent.com/nexus/repository/maven-public/" }
+}
+
+group = "com.aurora.day"
+version = "1.0"
+description = "backend for aurora timer"
+
+
+dependencies {
+    implementation platform("org.noear:solon-parent:3.3.3")
+    
+    implementation("org.noear:solon-web")
+    implementation("org.noear:solon-view-freemarker")
+    implementation("org.noear:solon-logging-logback")
+
+    testImplementation("org.noear:solon-test")
+    //
+    runtimeOnly 'org.postgresql:postgresql:42.7.7'
+    annotationProcessor 'com.mybatis-flex:mybatis-flex-processor:1.10.9'
+    implementation 'com.mybatis-flex:mybatis-flex-solon-plugin:1.10.9'
+    implementation 'com.zaxxer:HikariCP:6.3.0'
+    implementation 'org.noear:solon-security-validation'
+    implementation 'org.apache.poi:poi-ooxml:5.4.1'
+    //hutool
+    implementation 'cn.hutool:hutool-core:5.8.38'
+    implementation 'cn.hutool:hutool-jwt:5.8.38'
+    implementation 'cn.hutool:hutool-poi:5.8.38'
+    implementation 'cn.hutool:hutool-http:5.8.38'
+    implementation 'cn.hutool:hutool-cache:5.8.38'
+}
+
+compileJava {
+    options.encoding = "UTF-8"
+    options.compilerArgs << "-parameters"
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": "com.aurora.day.auroratimerserver.App"
+    }
+    
+    dependsOn(configurations.runtimeClasspath)
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(configurations.runtimeClasspath.collect {
+        if (it.isDirectory()) it else zipTree(it)
+    }){
+        exclude 'META-INF/MANIFEST.MF'
+        exclude 'META-INF/*.SF'
+        exclude 'META-INF/*.DSA'
+        exclude 'META-INF/*.RSA'
+    }
+    
+    def sourcesMain = sourceSets.main
+    from(sourcesMain.output)
+}
