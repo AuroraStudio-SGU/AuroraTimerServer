@@ -1,6 +1,7 @@
 package com.aurora.day.auroratimerserver.model;
 
 
+import com.aurora.day.auroratimerserver.model.vo.UserVo;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
@@ -38,7 +39,19 @@ public class User extends Model<User> {
     private Boolean afk;
     //未完成打卡目标次数
     private Integer unfinishedCount;
-    //本周减时时长
-    @Deprecated
-    private Long reduceTime;
+
+    public UserVo toVo (){
+        UserVo vo = new UserVo();
+        vo.setId(id);
+        vo.setName(name);
+        vo.setGarde(garde);
+        vo.setWorkGroup(workGroup);
+        vo.setMajor(major);
+        vo.setAdmin(admin);
+        vo.setAfk(afk);
+        vo.setUnfinishedCount(unfinishedCount);
+        vo.setAvatar(avatar);
+        vo.setPriv(priv);
+        return vo;
+    }
 }

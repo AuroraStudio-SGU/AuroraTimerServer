@@ -34,12 +34,21 @@ public class TokenUtil {
         return JWTUtil.verify(token, key.getBytes(StandardCharsets.UTF_8));
     }
 
+    public static boolean Verify(Context ctx) {
+        String token = ctx.header("token");
+        return Verify(token);
+    }
+
     public static boolean VerifyAdmin(Context request) {
         String token = request.header("token");
         if (!Verify(token)) return false;
         return JWTUtil.parseToken(token).getPayloads().getBool("isAdmin", false);
     }
 
+    public static String getId(Context ctx) {
+        String token = ctx.header("token");
+        return getId(token);
+    }
     public static String getId(String token) {
         if (Verify(token)) {
             return JWTUtil.parseToken(token).getPayloads().getStr("user_id");

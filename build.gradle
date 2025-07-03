@@ -16,26 +16,28 @@ description = "backend for aurora timer"
 
 
 dependencies {
+    //solon
     implementation platform("org.noear:solon-parent:3.3.3")
-    
     implementation("org.noear:solon-web")
     implementation("org.noear:solon-view-freemarker")
     implementation("org.noear:solon-logging-logback")
-
+    implementation 'org.noear:solon-scheduling-simple'
+    implementation 'org.noear:solon-cache-caffeine:3.3.2'
+    implementation 'org.noear:solon-security-validation'
     testImplementation("org.noear:solon-test")
     //
     runtimeOnly 'org.postgresql:postgresql:42.7.7'
     annotationProcessor 'com.mybatis-flex:mybatis-flex-processor:1.10.9'
     implementation 'com.mybatis-flex:mybatis-flex-solon-plugin:1.10.9'
     implementation 'com.zaxxer:HikariCP:6.3.0'
-    implementation 'org.noear:solon-security-validation'
     implementation 'org.apache.poi:poi-ooxml:5.4.1'
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.2.0'
     //hutool
     implementation 'cn.hutool:hutool-core:5.8.38'
     implementation 'cn.hutool:hutool-jwt:5.8.38'
     implementation 'cn.hutool:hutool-poi:5.8.38'
     implementation 'cn.hutool:hutool-http:5.8.38'
-    implementation 'cn.hutool:hutool-cache:5.8.38'
+
 }
 
 compileJava {

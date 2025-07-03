@@ -17,10 +17,8 @@ public class DutyService implements IDutyService {
 
     @Override
     public DutySchedule getCurrentWeekSchedule() {
-        DutySchedule result;
-        QueryWrapper wrapper = new QueryWrapper();
         int week = WeekUtil.getCurrentWeekIdentifier();
-        result = dutyMapper.selectOneById(week);
+        DutySchedule result = dutyMapper.selectOneById(week);
         if (result == null) {
             result = new DutySchedule(week);
             dutyMapper.insert(result);
